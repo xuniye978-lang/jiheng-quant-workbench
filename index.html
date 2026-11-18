@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玑衡 · A股量化资讯工作台</title>
+<style>
+  :root{
+    --bg:#060a14;
+    --bg2:#0a1020;
+    --panel:rgba(16,22,38,.72);
+    --panel-solid:#101626;
+    --border:rgba(120,150,255,.14);
+    --border-strong:rgba(120,150,255,.28);
+    --text:#e8ecf4;
+    --muted:#8b93a7;
+    --faint:#5c6579;
+    --cyan:#38bdf8;
+    --violet:#a78bfa;
+    --up:#ff5c6c;
+    --down:#22c55e;
+    --gold:#f5c04a;
+    --glow:0 0 24px rgba(56,189,248,.25);
+    --radius:16px;
+    --mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    /* 表面/浮层（供主题切换） */
+    --surf-hi:rgba(255,255,255,.05);
+    --surf-mid:rgba(255,255,255,.03);
+    --surf-low:rgba(255,255,255,.02);
+    --glass-hdr:rgba(6,10,20,.72);
+    --glass-bar:rgba(10,16,32,.6);
+    --glass-panel:rgba(10,16,32,.85);
+    --glass-pop:rgba(12,18,34,.96);
+    --glass-scrim:rgba(4,8,16,.72);
+    --shadow-card:0 12px 40px rgba(0,0,0,.35);
+    --shadow-side:-20px 0 60px rgba(0,0,0,.5);
+    --shadow-pop:0 30px 80px rgba(0,0,0,.6);
+    --grid-dot:rgba(120,150,255,.05);
+    --graph-text:#dfe5f0;
+    --graph-text-dim:rgba(232,236,244,.2);
+    --star:150,180,255;
+    --ring-theme:rgba(255,255,255,.5);
+    --ring-stock:rgba(255,255,255,.28);
+    --glow-cyan:rgba(56,189,248,.10);
+    --glow-violet:rgba(167,139,250,.10);
+    --glow-cyan2:rgba(56,189,248,.06);
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fb;
+    --bg2:#edf0f8;
+    --panel:rgba(255,255,255,.78);
+    --panel-solid:#ffffff;
+    --border:rgba(30,45,90,.12);
+    --border-strong:rgba(30,45,90,.26);
+    --text:#1a2233;
+    --muted:#5b6578;
+    --faint:#8b93a6;
+    --cyan:#0ea5e9;
+    --violet:#7c3aed;
+    --up:#e11d48;
+    --down:#16a34a;
+    --gold:#d97706;
+    --glow:0 0 24px rgba(14,165,233,.18);
+    --surf-hi:rgba(15,25,55,.06);
+    --surf-mid:rgba(15,25,55,.04);
+    --surf-low:rgba(15,25,55,.025);
+    --glass-hdr:rgba(255,255,255,.84);
+    --glass-bar:rgba(255,255,255,.72);
+    --glass-panel:rgba(255,255,255,.92);
+    --glass-pop:rgba(255,255,255,.97);
+    --glass-scrim:rgba(20,30,60,.4);
+    --shadow-card:0 12px 40px rgba(30,40,70,.15);
+    --shadow-side:-20px 0 60px rgba(30,40,70,.22);
+    --shadow-pop:0 30px 80px rgba(30,40,70,.25);
+    --grid-dot:rgba(30,45,90,.06);
+    --graph-text:#33405c;
+    --graph-text-dim:rgba(51,64,92,.35);
+    --star:160,175,205;
+    --ring-theme:rgba(30,40,70,.5);
+    --ring-stock:rgba(30,40,70,.3);
+    --glow-cyan:rgba(14,165,233,.08);
+    --glow-violet:rgba(124,58,237,.08);
+    --glow-cyan2:rgba(14,165,233,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1200px 700px at 15% -10%, var(--glow-cyan), transparent 60%),
+      radial-gradient(1000px 800px at 100% 0%, var(--glow-violet), transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, var(--glow-cyan2), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    min-height:100vh;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--cyan);text-decoration:none}
+  ::selection{background:rgba(56,189,248,.3)}
+
+  /* 星空背景 */
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+  /* 顶部 */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    background:var(--glass-hdr);
+    border-bottom:1px solid var(--border);
+  }
+  .header-inner{
+    max-width:1280px;margin:0 auto;padding:18px 28px;
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{
+    width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));
+    display:grid;place-items:center;font-weight:800;font-size:18px;color:#04121f;
+    box-shadow:var(--glow);
+  }
+  .brand h1{font-size:19px;font-weight:700;letter-spacing:.5px}
+  .brand .sub{font-size:12px;color:var(--muted);letter-spacing:1px}
+  .spacer{flex:1}
+  .header-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:6px 12px;border-radius:999px;
+    border:1px solid var(--border);background:var(--surf-mid);
+    font-size:12px;color:var(--muted);white-space:nowrap;
+  }
+  .pill b{color:var(--text);font-weight:600;font-family:var(--mono)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--down);box-shadow:0 0 8px var(--down);animation:pulse 2s infinite}
+  #connPill.offline .dot{background:var(--up);box-shadow:0 0 8px var(--up)}
+  #connPill.offline{color:var(--up)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .kbd{
+    padding:3px 8px;border:1px solid var(--border-strong);border-radius:6px;
+    background:var(--surf-hi);font-family:var(--mono);font-size:11px;color:var(--text);
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:7px 14px;border-radius:10px;border:1px solid var(--border-strong);
+    background:rgba(56,189,248,.08);color:var(--cyan);font-size:13px;cursor:pointer;
+    transition:.2s;font-family:inherit;
+  }
+  .btn:hover{background:rgba(56,189,248,.18);border-color:var(--cyan)}
+  .btn.spinning svg{animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 行情快照滚动条 */
+  #ticker{
+    border-bottom:1px solid var(--border);
+    background:var(--glass-bar);
+    overflow:hidden;position:relative;z-index:40;
+  }
+  #ticker-track{display:inline-flex;gap:34px;padding:9px 0;white-space:nowrap;will-change:transform}
+  .tk{display:inline-flex;gap:9px;align-items:center;font-size:12.5px}
+  .tk .n{color:var(--muted)}
+  .tk .p{font-family:var(--mono);color:var(--text)}
+  .tk .c{font-family:var(--mono);font-weight:600}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--muted)}
+
+  /* 导航 */
+  nav{
+    position:sticky;top:0;z-index:45;
+  }
+  .nav-inner{
+    max-width:1280px;margin:0 auto;padding:0 28px;
+    display:flex;gap:6px;align-items:center;
+  }
+  .nav-inner a{
+    padding:12px 16px;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;
+    transition:.2s;white-space:nowrap;
+  }
+  .nav-inner a:hover{color:var(--text)}
+  .nav-inner a.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+  /* 主体 */
+  main{position:relative;z-index:10;max-width:1280px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:48px}
+
+  section{scroll-margin-top:120px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+  .sec-head h2{font-size:22px;font-weight:700}
+  .sec-head .tag{font-size:12px;color:var(--faint);letter-spacing:1px}
+  .sec-head .badge{
+    font-size:11px;padding:2px 9px;border-radius:999px;
+    background:rgba(56,189,248,.14);color:var(--cyan);border:1px solid rgba(56,189,248,.3);
+  }
+
+  /* 简报 */
+  .brief-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:.25s;position:relative;overflow:hidden;
+  }
+  .card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:var(--shadow-card)}
+  .card.hero{border-color:rgba(56,189,248,.4);background:linear-gradient(160deg,rgba(56,189,248,.10),rgba(167,139,250,.06)),var(--panel)}
+  .card .kicker{font-size:11px;letter-spacing:1.5px;color:var(--cyan);text-transform:uppercase;margin-bottom:8px}
+  .card h3{font-size:16px;margin-bottom:8px}
+  .card p{font-size:13.5px;color:var(--muted)}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{
+    font-size:12px;padding:4px 11px;border-radius:999px;
+    border:1px solid var(--border);background:var(--surf-mid);color:var(--muted);
+  }
+  .chip.hot{color:var(--up);border-color:rgba(255,92,108,.4);background:rgba(255,92,108,.08)}
+  .chip.cy{color:var(--cyan);border-color:rgba(56,189,248,.4);background:rgba(56,189,248,.08)}
+  .chip.gold{color:var(--gold);border-color:rgba(245,192,74,.4);background:rgba(245,192,74,.08)}
+
+  /* 事件流 */
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .fbtn{
+    padding:6px 14px;border-radius:999px;border:1px solid var(--border);
+    background:var(--surf-low);color:var(--muted);font-size:12.5px;cursor:pointer;transition:.2s;font-family:inherit;
+  }
+  .fbtn:hover{color:var(--text);border-color:var(--border-strong)}
+  .fbtn.active{background:rgba(56,189,248,.14);color:var(--cyan);border-color:rgba(56,189,248,.4)}
+  .event-list{display:flex;flex-direction:column;gap:10px}
+  .event{
+    display:flex;gap:14px;align-items:flex-start;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:15px 18px;
+    transition:.2s;position:relative;
+  }
+  .event:hover{border-color:var(--border-strong)}
+  .event.new{animation:flashIn 1.2s ease}
+  @keyframes flashIn{0%{background:rgba(56,189,248,.18);border-color:var(--cyan)}100%{background:var(--panel)}}
+  .ev-rank{flex:0 0 auto;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+    font-weight:700;font-family:var(--mono);font-size:15px}
+  .rank-重磅{background:rgba(255,92,108,.16);color:var(--up)}
+  .rank-重要{background:rgba(245,192,74,.14);color:var(--gold)}
+  .rank-一般{background:rgba(56,189,248,.12);color:var(--cyan)}
+  .ev-body{flex:1;min-width:0}
+  .ev-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .ev-tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surf-hi);color:var(--muted);border:1px solid var(--border)}
+  .ev-time{font-size:11px;color:var(--faint);font-family:var(--mono)}
+  .ev-title{font-size:14.5px;font-weight:600}
+  .ev-desc{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .ev-rel{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+  .rel{
+    font-size:11.5px;padding:3px 9px;border-radius:7px;cursor:pointer;
+    background:rgba(167,139,250,.10);color:var(--violet);border:1px solid rgba(167,139,250,.3);transition:.15s;
+  }
+  .rel:hover{background:rgba(167,139,250,.22)}
+
+  /* 图谱（泳道分组布局） */
+  .graph-wrap{
+    position:relative;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;min-height:780px;
+    background-image:
+      radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .relation-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .graph-lanes{
+    position:relative;z-index:2;
+    display:grid;grid-template-columns:repeat(6,1fr);gap:12px;
+    padding:20px 16px 40px;align-items:start;
+  }
+  .graph-lane{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:12px 10px 14px;display:flex;flex-direction:column;gap:8px;
+    min-width:0;
+  }
+  .graph-lane.lane-cold{opacity:.72}
+  .lane-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px;border-bottom:1px solid var(--border)}
+  .lane-head .lane-icon{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));color:#04121f;font-weight:700}
+  .lane-head strong{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lane-head em{font-size:11px;color:var(--faint);margin-left:auto;font-style:normal;font-family:var(--mono)}
+  .lane-head .lane-avg{font-size:11px;font-family:var(--mono);font-weight:600;flex:0 0 auto}
+  .graph-node-list{display:flex;flex-direction:column;gap:6px}
+  .seg-group{display:flex;flex-direction:column;gap:5px}
+  .seg-head{display:flex;align-items:center;gap:6px;padding:4px 2px 2px;font-size:11px;color:var(--muted);border-top:1px dashed var(--border)}
+  .seg-head span{font-weight:600;letter-spacing:.5px}
+  .seg-head em{font-size:10.5px;font-family:var(--mono);font-weight:600;margin-left:auto;font-style:normal}
+  .graph-node{
+    position:relative;text-align:left;cursor:pointer;font-family:inherit;
+    background:var(--surf-mid);border:1px solid var(--border);border-radius:10px;
+    padding:8px 10px;display:flex;flex-direction:column;gap:3px;
+    transition:border-color .15s, background .15s, transform .15s, box-shadow .15s;
+    color:var(--text);
+  }
+  .graph-node:hover{border-color:var(--border-strong);background:var(--surf-hi);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+  .graph-node:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .node-main{display:flex;align-items:baseline;gap:7px;min-width:0}
+  .node-main small{font-size:10px;color:var(--faint);flex:0 0 auto;font-family:var(--mono)}
+  .node-main strong{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .node-main .chg{margin-left:auto;font-size:12px;font-family:var(--mono);font-weight:700;flex:0 0 auto}
+  .node-meta{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--muted)}
+  .node-meta .hot-tag{font-size:9.5px;padding:1px 6px;border-radius:6px;background:rgba(255,92,108,.14);color:var(--up);border:1px solid rgba(255,92,108,.3)}
+  .node-meta .ev-count{font-family:var(--mono)}
+  .graph-node.dimmed{opacity:.22}
+  .graph-node.highlighted{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan), 0 6px 20px rgba(56,189,248,.25)}
+  .graph-node.filtered-out{display:none}
+  /* 关系线 */
+  .relation-layer .rel-line{stroke-linecap:round;fill:none}
+  .relation-layer .rel-line.dimmed{opacity:.06}
+
+  .graph-topbar{
+    position:absolute;top:14px;left:14px;right:14px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;z-index:5;pointer-events:none;
+  }
+  .graph-topbar>*{pointer-events:auto}
+  .legend{
+    background:var(--glass-panel);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:12px;
+  }
+  .legend .l-title{font-size:11px;color:var(--faint);letter-spacing:1px;margin-bottom:2px}
+  .legend-item{display:flex;align-items:center;gap:9px;cursor:pointer;color:var(--muted);user-select:none;transition:.15s}
+  .legend-item:hover{color:var(--text)}
+  .legend-item.off{opacity:.38}
+  .swatch{width:18px;height:0;border-top:3px solid;border-radius:2px}
+  .swatch.news{border-color:var(--up)}
+  .swatch.chain{border-color:var(--cyan)}
+  .swatch.supply{border-color:var(--violet)}
+  .swatch.compete{border-color:var(--gold)}
+  .swatch.other{border-color:var(--faint)}
+  .node-sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .node-sw.theme{background:linear-gradient(135deg,var(--cyan),var(--violet));box-shadow:0 0 8px rgba(56,189,248,.6)}
+  .node-sw.stock{background:var(--faint)}
+  .graph-actions{margin-left:auto;display:flex;gap:8px}
+  .view-toggle{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--glass-panel)}
+  .view-toggle button{
+    padding:8px 14px;border:none;background:transparent;color:var(--muted);font-size:12.5px;cursor:pointer;font-family:inherit;transition:.2s;
+  }
+  .view-toggle button.active{background:rgba(56,189,248,.16);color:var(--cyan)}
+  .hint{position:absolute;bottom:14px;left:14px;font-size:11.5px;color:var(--faint);z-index:5;pointer-events:none}
+  .graph-tooltip{
+    position:fixed;z-index:100;background:var(--glass-pop);border:1px solid var(--border-strong);
+    border-radius:12px;padding:12px 14px;font-size:12.5px;min-width:170px;display:none;pointer-events:none;
+    box-shadow:0 16px 50px rgba(0,0,0,.5);
+  }
+  .graph-tooltip .tt-name{font-weight:700;font-size:13.5px;margin-bottom:3px}
+  .graph-tooltip .tt-row{display:flex;justify-content:space-between;gap:14px;color:var(--muted)}
+  .graph-tooltip .tt-row b{color:var(--text);font-family:var(--mono)}
+
+  /* 详情面板 */
+  #detail{
+    position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);z-index:200;
+    background:var(--glass-pop);backdrop-filter:blur(20px);border-left:1px solid var(--border-strong);
+    transform:translateX(105%);transition:transform .3s cubic-bezier(.22,1,.36,1);
+    display:flex;flex-direction:column;box-shadow:var(--shadow-side);
+  }
+  #detail.open{transform:translateX(0)}
+  .detail-head{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+  .detail-head .code{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .detail-head h3{font-size:19px;margin-top:2px}
+  .detail-close{margin-left:auto;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+  .detail-close:hover{color:var(--text)}
+  .detail-body{padding:20px 22px;overflow-y:auto;flex:1}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+  .kv span{color:var(--muted)}
+  .kv b{font-family:var(--mono)}
+  .detail-sec{margin-top:20px}
+  .detail-sec .ds-title{font-size:12px;letter-spacing:1.5px;color:var(--faint);margin-bottom:10px;text-transform:uppercase}
+  .rel-list{display:flex;flex-direction:column;gap:8px}
+  .rel-row{display:flex;align-items:center;gap:10px;font-size:13px;background:var(--surf-mid);padding:9px 12px;border-radius:10px;border:1px solid var(--border)}
+  .rel-row .rl-type{font-size:11px;padding:2px 7px;border-radius:6px;border:1px solid var(--border);color:var(--muted)}
+  .rel-row .rl-name{color:var(--text)}
+  .rel-row .rl-arrow{color:var(--faint);margin-left:auto}
+
+  /* 复盘 */
+  .review-table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .review-table th,.review-table td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border)}
+  .review-table th{font-size:12px;color:var(--faint);letter-spacing:1px;font-weight:600;background:var(--surf-low)}
+  .review-table tr:last-child td{border-bottom:none}
+  .review-table tr:hover td{background:var(--surf-low)}
+  .verdict{font-size:12px;padding:3px 10px;border-radius:999px;font-weight:600}
+  .verdict.hit{background:rgba(255,92,108,.14);color:var(--up)}
+  .verdict.miss{background:rgba(34,197,94,.14);color:var(--down)}
+  .verdict.part{background:rgba(245,192,74,.14);color:var(--gold)}
+  .num{font-family:var(--mono)}
+
+  /* 搜索面板 */
+  #palette{
+    position:fixed;inset:0;z-index:300;background:var(--glass-scrim);backdrop-filter:blur(8px);
+    display:none;align-items:flex-start;justify-content:center;padding-top:12vh;
+  }
+  #palette.open{display:flex}
+  .palette-box{width:min(620px,92vw);background:var(--glass-pop);border:1px solid var(--border-strong);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-pop)}
+  .palette-input{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
+  .palette-input input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:16px;font-family:inherit}
+  .palette-results{max-height:420px;overflow-y:auto;padding:8px}
+  .pal-res{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:14px}
+  .pal-res:hover,.pal-res.sel{background:rgba(56,189,248,.10)}
+  .pal-res .pr-type{font-size:11px;color:var(--faint);min-width:34px}
+  .pal-res .pr-name{color:var(--text)}
+  .pal-res .pr-meta{margin-left:auto;font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .pal-empty{padding:28px;text-align:center;color:var(--faint);font-size:13px}
+
+  /* toast */
+  #toast{
+    position:fixed;left:50%;bottom:28px;transform:translate(-50%,120%);z-index:400;
+    background:var(--glass-pop);border:1px solid var(--border-strong);border-radius:12px;
+    padding:12px 20px;font-size:13.5px;box-shadow:var(--shadow-card);
+    display:flex;align-items:center;gap:10px;transition:transform .35s cubic-bezier(.22,1,.36,1);
+  }
+  #toast.show{transform:translate(-50%,0)}
+  #toast .t-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+
+  footer{position:relative;z-index:10;max-width:1280px;margin:0 auto;padding:30px 28px 60px;text-align:center;color:var(--faint);font-size:12px}
+  .disclaim{margin-top:10px;max-width:720px;margin-left:auto;margin-right:auto}
+
+  /* 载入遮罩 */
+  #boot{
+    position:fixed;inset:0;z-index:500;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    transition:opacity .6s, visibility .6s;
+  }
+  #boot.hide{opacity:0;visibility:hidden}
+  .boot-logo{
+    width:64px;height:64px;border-radius:18px;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));
+    display:grid;place-items:center;font-size:30px;font-weight:800;color:#04121f;
+    animation:bootPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes bootPulse{0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,.5)}50%{box-shadow:0 0 0 18px rgba(56,189,248,0)}}
+  .boot-title{font-size:20px;font-weight:700}
+  .boot-sub{font-size:13px;color:var(--muted)}
+  .boot-bar{width:220px;height:4px;background:var(--surf-hi);border-radius:99px;overflow:hidden}
+  .boot-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:99px;animation:load 1.1s ease-in-out infinite}
+  @keyframes load{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+
+  @media(max-width:1000px){
+    .graph-lanes{grid-template-columns:repeat(3,1fr)}
+  }
+  @media(max-width:720px){
+    .header-inner{padding:14px 16px}
+    main{padding:18px 14px}
+    .brand h1{font-size:16px}
+    .graph-lanes{grid-template-columns:repeat(2,1fr)}
+    .nav-inner{overflow-x:auto}
+  }
+</style>
+<script>
+// 防止主题闪烁：在 body 渲染前应用已保存主题
+(function(){ try{ var t=localStorage.getItem('quant-theme'); if(t==='light')document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<!-- 载入遮罩 -->
+<div id="boot">
+  <div class="boot-logo">玑</div>
+  <div class="boot-title" data-i18n="bootTitle">正在载入 玑衡 · A股量化资讯宇宙</div>
+  <div class="boot-sub" data-i18n="bootSub">连接数据源 · 整理今日主线 · 构建题材图谱…</div>
+  <div class="boot-bar"><i></i></div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">玑</div>
+      <div>
+        <h1>玑衡</h1>
+        <div class="sub" data-i18n="brandSub">A股量化资讯宇宙 · 事件驱动 · 题材映射 · 行情验证</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="header-meta">
+      <span class="pill" id="connPill"><span class="dot"></span><span id="connText" data-i18n="connecting">连接数据源…</span></span>
+      <span class="pill"><span data-i18n="dataUpdated">数据更新</span> <b id="updateTime">--</b></span>
+      <span class="pill"><span data-i18n="mainLine">今日主线</span> <b id="mainLine">算力 / CPO</b></span>
+      <button class="btn" id="searchBtn" data-i18n-title="search" title="搜索 (Ctrl+K)"><span class="kbd">Ctrl K</span> <span data-i18n="search">搜索</span></button>
+      <button class="btn" id="langBtn" title="Switch to English"><span id="langLabel">中</span></button>
+      <button class="btn" id="themeBtn" data-i18n-title="themeDay" title="切换白天/黑夜模式">
+        <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        <span id="themeLabel" data-i18n="themeDay">白天</span>
+      </button>
+      <button class="btn" id="refreshBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+        <span data-i18n="refresh">刷新</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="ticker"><div id="ticker-track"></div></div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#sec-report" class="active" data-i18n="navBrief">简报</a>
+    <a href="#sec-events" data-i18n="navEvents">事件流</a>
+    <a href="#sec-graph" data-i18n="navGraph">图谱</a>
+    <a href="#sec-review" data-i18n="navReview">复盘</a>
+  </div>
+</nav>
+
+<main>
+  <!-- 简报 -->
+  <section id="sec-report">
+    <div class="sec-head">
+      <h2 data-i18n="briefTitle">每日题材简报</h2>
+      <span class="badge" data-i18n="briefBadge">今日主线</span>
+      <span class="tag" id="reportDate"></span>
+    </div>
+    <div class="brief-grid" id="briefGrid"></div>
+  </section>
+
+  <!-- 事件流 -->
+  <section id="sec-events">
+    <div class="sec-head">
+      <h2 data-i18n="eventsTitle">事件流</h2>
+      <span class="tag" data-i18n="eventsSub">按重要性排序 · 多源交叉核对</span>
+    </div>
+    <div class="filters" id="evFilters"></div>
+    <div class="event-list" id="eventList"></div>
+  </section>
+
+  <!-- 图谱 -->
+  <section id="sec-graph">
+    <div class="sec-head">
+      <h2 data-i18n="graphTitle">题材产业链图谱</h2>
+      <span class="tag" data-i18n="graphSub">悬停预览关系 · 点击锁定查看详情</span>
+    </div>
+    <div class="graph-wrap">
+      <svg id="graph" class="relation-layer" aria-hidden="true"></svg>
+      <div class="graph-lanes" id="graphLanes"></div>
+      <div class="graph-topbar">
+        <div class="legend" id="legend"></div>
+        <div class="graph-actions">
+          <div class="view-toggle">
+            <button id="viewAll" class="active" data-i18n="viewAll">完整列表</button>
+            <button id="viewToday" data-i18n="viewToday">只看今日催化</button>
+          </div>
+          <button class="btn" id="resetGraph" data-i18n="resetGraph">重置视图</button>
+        </div>
+      </div>
+      <div class="hint" data-i18n="graphHint">悬停预览关系 · 点击锁定查看详情</div>
+    </div>
+  </section>
+
+  <!-- 复盘 -->
+  <section id="sec-review">
+    <div class="sec-head">
+      <h2 data-i18n="reviewTitle">复盘</h2>
+      <span class="tag" data-i18n="reviewSub">每日判断 vs 次日真实行情</span>
+    </div>
+    <table class="review-table" id="reviewTable"></table>
+  </section>
+</main>
+
+<footer>
+  <div><strong>玑衡 · A股量化资讯工作台</strong> · <span data-i18n="footerTag">研究系统整理 · 多源信息交叉核对 · 题材产业链映射</span></div>
+  <div class="disclaim" data-i18n="disclaim">本页面全部数据为拟真示例数据，仅用于产品演示，不反映真实行情；内容仅供研究参考，不构成任何投资建议。股市有风险，入市需谨慎。</div>
+</footer>
+
+<!-- 详情面板 -->
+<aside id="detail">
+  <div class="detail-head">
+    <div>
+      <div class="code" id="dCode"></div>
+      <h3 id="dName"></h3>
+    </div>
+    <button class="detail-close" id="dClose">&times;</button>
+  </div>
+  <div class="detail-body" id="dBody"></div>
+</aside>
+
+<!-- 搜索面板 -->
+<div id="palette">
+  <div class="palette-box">
+    <div class="palette-input">
+      <span class="kbd">⌕</span>
+      <input id="palInput" data-i18n-ph="searchPh" placeholder="搜索题材 / 个股 / 事件…（Esc 关闭）">
+      <span class="kbd">Esc</span>
+    </div>
+    <div class="palette-results" id="palResults"></div>
+  </div>
+</div>
+
+<div id="toast"><span class="t-dot"></span><span id="toastText"></span></div>
+
+<script>
+"use strict";
+/* ============================================================
+   数据模型（拟真示例数据）
+   ============================================================ */
+const PALETTE = { cyan:'#38bdf8', violet:'#a78bfa', up:'#ff5c6c', down:'#22c55e', gold:'#f5c04a', faint:'#5c6579' };
+
+/* ============================================================
+   国际化（i18n）：中英双语
+   ============================================================ */
+const LANG_KEY = 'quant-lang';
+// 语言状态：'zh' | 'en'
+let LANG = 'zh';
+
+// UI 文案字典
+const I18N = {
+  zh: {
+    bootTitle:'正在载入 玑衡 · A股量化资讯宇宙',
+    bootSub:'连接数据源 · 整理今日主线 · 构建题材图谱…',
+    brandSub:'A股量化资讯宇宙 · 事件驱动 · 题材映射 · 行情验证',
+    connecting:'连接数据源…',
+    quoteOnline:'实时行情已连接',
+    quoteOffline:'行情源连接失败',
+    dataUpdated:'数据更新',
+    mainLine:'今日主线',
+    search:'搜索',
+    refresh:'刷新',
+    themeDay:'白天',
+    themeNight:'黑夜',
+    navBrief:'简报', navEvents:'事件流', navGraph:'图谱', navReview:'复盘',
+    briefTitle:'每日题材简报', briefBadge:'今日主线',
+    eventsTitle:'事件流', eventsSub:'按重要性排序 · 多源交叉核对',
+    graphTitle:'题材产业链图谱', graphSub:'悬停预览关系 · 点击锁定查看详情',
+    viewAll:'完整列表', viewToday:'只看今日催化', resetGraph:'重置视图',
+    graphHint:'滚轮缩放 · 拖拽平移 · 拖动节点 · 点击锁定',
+    reviewTitle:'复盘', reviewSub:'每日判断 vs 次日真实行情',
+    footer:'玑衡 · A股量化资讯工作台', footerTag:'研究系统整理 · 多源信息交叉核对 · 题材产业链映射',
+    disclaim:'本页面行情与快讯来自公开接口，内容仅供研究参考，不构成任何投资建议。股市有风险，入市需谨慎。',
+    searchPh:'搜索题材 / 个股 / 事件…（Esc 关闭）',
+    searchEmpty:'未找到匹配结果', searchPrompt:'输入关键词搜索题材 / 个股 / 事件',
+    mainLineLabel:'今日主线', strongTheme:'强势题材', riskTheme:'风险提示',
+    leading:'领涨', strengthening:'走强', diverging:'分化', underPressure:'板块承压',
+    avgChip:'板块均值', membersCnt:'只成分股', upN:'涨', downN:'跌',
+    leadingStock:'领涨', leadingDecliner:'领跌', riskBody:'短期需警惕高位题材分化与资金获利了结带来的回撤风险。',
+    themeLabel:'题材主线', relatedStocks:'关联个股', relatedEvents:'相关事件', industryChain:'产业链关系',
+    noRelation:'暂无关联', noEvents:'暂无相关事件', noMembers:'暂无成分',
+    latestPrice:'最新价', changePct:'涨跌幅', sector:'所属题材', code:'代码',
+    upDown:'上涨 / 下跌', components:'成分个股',
+    relNews:'直接新闻刺激', relChain:'产业链映射关联', relSupply:'供应 / 客户', relCompete:'竞争 / 待验证', relOther:'其他（默认折叠）',
+    relLegendTitle:'关系图例', nodeTheme:'题材 / 主线', nodeUp:'个股（涨）', nodeDown:'个股（跌）',
+    rankMajor:'重磅', rankImportant:'重要', rankNormal:'一般', rankAll:'全部',
+    tagPolicy:'政策', tagAnnounce:'公告', tagMarket:'行情', tagFund:'资金', tagResearch:'研报', tagFlash:'快讯', tagOverseas:'海外催化', tagIndustry:'行业', tagToday:'今日',
+    clickLock:'点击锁定查看详情',
+    toastConnected:'数据源已连接 · 今日主线已更新',
+    toastQuoteOk:'行情已更新', toastQuoteFail:'行情源连接失败，稍后自动重试',
+    toastNewsUpdate:'实时快讯更新', newsUnit:'条',
+    verHit:'命中', verPart:'部分命中', verMiss:'未命中',
+    reviewDate:'日期', reviewTheme:'题材主线', reviewJudgment:'当日判断', reviewNext:'次日行情', reviewResult:'验证结果',
+    loadingMsg:'正在整理今日主线',
+  },
+  en: {
+    bootTitle:'Loading Jiheng · A-Share Quant Intelligence Universe',
+    bootSub:'Connecting data source · Compiling today\'s main theme · Building theme graph…',
+    brandSub:'A-Share Quant Universe · Event-Driven · Theme Mapping · Market Validation',
+    connecting:'Connecting…',
+    quoteOnline:'Live quotes connected',
+    quoteOffline:'Quote source unreachable',
+    dataUpdated:'Updated',
+    mainLine:'Main Theme',
+    search:'Search',
+    refresh:'Refresh',
+    themeDay:'Light',
+    themeNight:'Dark',
+    navBrief:'Brief', navEvents:'Events', navGraph:'Graph', navReview:'Review',
+    briefTitle:'Daily Theme Brief', briefBadge:'Main Theme',
+    eventsTitle:'Event Feed', eventsSub:'Sorted by importance · Cross-verified',
+    graphTitle:'Theme Industry Graph', graphSub:'Hover to preview · Click to lock & inspect',
+    viewAll:'Full list', viewToday:'Today\'s catalysts only', resetGraph:'Reset view',
+    graphHint:'Scroll to zoom · Drag to pan · Drag nodes · Click to lock',
+    reviewTitle:'Review', reviewSub:'Daily judgment vs. next-day market',
+    footer:'Jiheng · A-Share Quant Intelligence Workbench', footerTag:'Systematic research · Cross-verified sources · Theme mapping',
+    disclaim:'Quotes and news come from public APIs; for research reference only, not investment advice. Markets are risky.',
+    searchPh:'Search themes / stocks / events… (Esc to close)',
+    searchEmpty:'No matches found', searchPrompt:'Type to search themes, stocks or events',
+    mainLineLabel:'Main Theme', strongTheme:'Strong Theme', riskTheme:'Risk Alert',
+    leading:'Leading', strengthening:'Gaining', diverging:'Diverging', underPressure:'Under Pressure',
+    avgChip:'Sector avg', membersCnt:'members', upN:'up', downN:'down',
+    leadingStock:'Leading', leadingDecliner:'Lagging', riskBody:'Beware of divergence in overextended themes and profit-taking pullbacks.',
+    themeLabel:'Theme', relatedStocks:'Related stocks', relatedEvents:'Related events', industryChain:'Industry relations',
+    noRelation:'No relations', noEvents:'No related events', noMembers:'No members',
+    latestPrice:'Last', changePct:'Change', sector:'Sector', code:'Code',
+    upDown:'Up / Down', components:'Constituents',
+    relNews:'Direct news catalyst', relChain:'Industry-chain mapping', relSupply:'Supplier / Customer', relCompete:'Rivalry / Unverified', relOther:'Others (collapsed)',
+    relLegendTitle:'Relation Legend', nodeTheme:'Theme / Main line', nodeUp:'Stock (up)', nodeDown:'Stock (down)',
+    rankMajor:'Major', rankImportant:'Important', rankNormal:'Minor', rankAll:'All',
+    tagPolicy:'Policy', tagAnnounce:'Announcement', tagMarket:'Market', tagFund:'Capital', tagResearch:'Research', tagFlash:'Flash', tagOverseas:'Overseas', tagIndustry:'Industry', tagToday:'Today',
+    clickLock:'Click to lock & view details',
+    toastConnected:'Data connected · Main theme updated',
+    toastQuoteOk:'Quotes updated', toastQuoteFail:'Quote source unreachable, will retry',
+    toastNewsUpdate:'News updates', newsUnit:'new',
+    verHit:'Hit', verPart:'Partial', verMiss:'Miss',
+    reviewDate:'Date', reviewTheme:'Theme', reviewJudgment:'Judgment', reviewNext:'Next-day', reviewResult:'Verdict',
+    loadingMsg:'Compiling today\'s main theme',
+  }
+};
+
+// 翻译函数
+function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.zh[key] || key; }
+// 数据对象名（题材/股票/指数）按语言返回
+function lname(obj){ return LANG==='en' ? (obj.name_en || obj.name) : obj.name; }
+function ldesc(obj){ return LANG==='en' ? (obj.desc_en || obj.desc) : obj.desc; }
+
+// 应用语言到所有带 data-i18n 属性的静态元素
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+  });
+}
+
+// 设置语言并刷新所有视图
+function setLang(lang, save){
+  LANG = lang==='en' ? 'en' : 'zh';
+  if(save){ try{ localStorage.setItem(LANG_KEY, LANG); }catch(e){} }
+  document.documentElement.setAttribute('lang', LANG==='en'?'en':'zh-CN');
+  applyStaticI18n();
+  syncLangUI();
+  // 动态视图全部重渲染
+  refreshMainLine();
+  renderEvents();
+  renderReview();
+  renderTicker();
+  renderLegend();
+  renderPalette($('#palInput').value || '');
+  setConnStatus(quoteState.online ? 'online' : 'offline', quoteState.online ? t('quoteOnline') : t('quoteOffline'));
+  // 图谱重渲染（题材名/股票名跟随语言）
+  graphRender();
+  // 若详情面板打开，刷新
+  if(graphState.locked) openDetail(graphState.locked);
+  // 英文模式：翻译事件流快讯
+  if(LANG==='en') translateEvents();
+}
+
+// 语言按钮 UI 同步
+function syncLangUI(){
+  const btn = $('#langBtn');
+  const label = $('#langLabel');
+  if(btn) btn.setAttribute('title', LANG==='en' ? '切换中文' : 'Switch to English');
+  if(label) label.textContent = LANG==='en' ? 'EN' : '中';
+}
+
+// 检测系统语言（首次访问无记忆时使用）
+function detectLang(){
+  try{ const saved = localStorage.getItem(LANG_KEY); if(saved) return saved; }catch(e){}
+  return (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+}
+
+/* ============================================================
+   快讯标题机器翻译（Google 免费端点，英文模式启用）
+   ============================================================ */
+const TRANSLATE_API = 'https://translate.googleapis.com/translate_a/single';
+const transCache = new Map(); // code -> {title, desc}
+let transQueue = [];         // 待翻译的 code 列表
+let transBusy = false;
+
+// 翻译单条文本（zh -> en）
+async function translateText(text){
+  if(!text) return text;
+  const url = `${TRANSLATE_API}?client=gtx&sl=zh-CN&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+  const resp = await fetch(url, { cache:'no-store' });
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  const json = await resp.json();
+  // 返回结构：[[["译文","原文",...], ...], null, ...]
+  const parts = (json && json[0] || []).map(seg=>seg[0]);
+  return parts.join('') || text;
+}
+
+// 翻译事件流中尚未翻译的条目（串行，避免并发过载）
+async function translateEvents(){
+  if(LANG!=='en' || transBusy) return;
+  const pending = EVENTS.filter(e=>e.code && !transCache.has(e.code));
+  if(!pending.length) return;
+  transBusy = true;
+  try{
+    for(const e of pending.slice(0, 6)){ // 每次最多翻 6 条
+      try{
+        const [title, desc] = await Promise.all([translateText(e.title), translateText(e.desc)]);
+        transCache.set(e.code, { title, desc });
+        e.title_en = title;
+        e.desc_en = desc;
+      }catch(err){ /* 单条失败跳过 */ }
+    }
+  }finally{
+    transBusy = false;
+  }
+  renderEvents();
+}
+
+// 取事件标题/摘要（英文模式下优先用翻译结果）
+function levent(e, field){
+  if(LANG!=='en') return e[field];
+  if(field==='title') return e.title_en || e.title;
+  if(field==='desc') return e.desc_en || e.desc;
+  return e[field];
+}
+
+// 题材节点
+const THEMES = [
+  { id:"t-cpo", name:"算力 / CPO", name_en:"AI Computing / CPO", tone:"cyan", desc:"AI 算力基础设施与共封装光学，光模块升级主线", desc_en:"AI computing infrastructure & co-packaged optics; optical module upgrade theme", segments:[["光模块", "Optical Modules"], ["光芯片", "Optical Chips"], ["服务器/整机", "Servers"], ["PCB", "PCB"], ["液冷", "Liquid Cooling"]] },
+  { id:"t-solid", name:"固态电池", name_en:"Solid-State Battery", tone:"violet", desc:"半固态量产前夜，材料端先行受益", desc_en:"Semi-solid battery mass production approaching; materials lead the way", segments:[["电池/整线", "Cell / Pack"], ["电解质", "Electrolyte"], ["正极/负极", "Cathode / Anode"]] },
+  { id:"t-robot", name:"人形机器人", name_en:"Humanoid Robots", tone:"cyan", desc:"量产预期升温，减速器 / 丝杠 / 传感器核心环节", desc_en:"Mass-production expectations rising; reducers, ball screws & sensors in focus", segments:[["减速器", "Reducers"], ["电机/执行器", "Motors / Actuators"], ["传感器", "Sensors"]] },
+  { id:"t-evtol", name:"低空经济", name_en:"Low-Altitude Economy", tone:"violet", desc:"eVTOL 适航取证推进，空管与整机链条", desc_en:"eVTOL certification advancing; air-traffic & aircraft value chain", segments:[["整机/eVTOL", "Aircraft / eVTOL"], ["动力系统", "Powertrain"], ["运营/空管", "Ops / ATC"]] },
+  { id:"t-semi", name:"半导体设备", name_en:"Semiconductor Equipment", tone:"gold", desc:"国产替代加速，先进制程设备与零部件", desc_en:"Accelerating domestic substitution; advanced-process equipment & parts", segments:[["刻蚀/薄膜", "Etch / Thin-film"], ["清洗/涂胶", "Clean / Coating"], ["零部件/材料", "Parts / Materials"]] },
+  { id:"t-pharma", name:"创新药", name_en:"Innovative Drugs", tone:"cyan", desc:"License-out 与临床数据催化，出海逻辑", desc_en:"License-out deals & clinical data catalysts; going-global theme", segments:[["创新药企", "Biopharma"], ["CXO/外包", "CXO / CRO"], ["生物药/器械", "Biologics / Devices"]] },
+];
+
+// 个股节点（secid 为东方财富市场前缀：6 开头=沪市"1."，其余=深市"0."）
+const STOCKS = [
+  // 自动生成：62 只产业链股票（题材->环节->公司）
+  // 算力 / CPO (AI Computing / CPO)
+  // -- 光模块
+  { id:"s-300308", name:"中际旭创", name_en:"Innolight", code:"300308", secid:"0.300308", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  { id:"s-300502", name:"新易盛", name_en:"Eoptolink", code:"300502", secid:"0.300502", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  { id:"s-300394", name:"天孚通信", name_en:"T&S Communications", code:"300394", secid:"0.300394", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  { id:"s-300570", name:"太辰光", name_en:"T&S Technology", code:"300570", secid:"0.300570", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  { id:"s-688313", name:"仕佳光子", name_en:"Shijia Photonics", code:"688313", secid:"1.688313", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  { id:"s-300620", name:"光库科技", name_en:"Advanced Fiber", code:"300620", secid:"0.300620", theme:"t-cpo", segment:"光模块", segment_en:"Optical Modules", price:0, change:0 },
+  // -- 光芯片
+  { id:"s-688498", name:"源杰科技", name_en:"Yuanjie Semi", code:"688498", secid:"1.688498", theme:"t-cpo", segment:"光芯片", segment_en:"Optical Chips", price:0, change:0 },
+  { id:"s-688048", name:"长光华芯", name_en:"Everbright Photonics", code:"688048", secid:"1.688048", theme:"t-cpo", segment:"光芯片", segment_en:"Optical Chips", price:0, change:0 },
+  { id:"s-688396", name:"华润微", name_en:"China Resources Micro", code:"688396", secid:"1.688396", theme:"t-cpo", segment:"光芯片", segment_en:"Optical Chips", price:0, change:0 },
+  // -- 服务器/整机
+  { id:"s-000977", name:"浪潮信息", name_en:"Inspur", code:"000977", secid:"0.000977", theme:"t-cpo", segment:"服务器/整机", segment_en:"Servers", price:0, change:0 },
+  { id:"s-601138", name:"工业富联", name_en:"Foxconn Industrial", code:"601138", secid:"1.601138", theme:"t-cpo", segment:"服务器/整机", segment_en:"Servers", price:0, change:0 },
+  { id:"s-603019", name:"中科曙光", name_en:"Sugon", code:"603019", secid:"1.603019", theme:"t-cpo", segment:"服务器/整机", segment_en:"Servers", price:0, change:0 },
+  // -- PCB
+  { id:"s-002463", name:"沪电股份", name_en:"WUS Printed Circuit", code:"002463", secid:"0.002463", theme:"t-cpo", segment:"PCB", segment_en:"PCB", price:0, change:0 },
+  { id:"s-002938", name:"鹏鼎控股", name_en:"Avary Holding", code:"002938", secid:"0.002938", theme:"t-cpo", segment:"PCB", segment_en:"PCB", price:0, change:0 },
+  { id:"s-300476", name:"胜宏科技", name_en:"Victory Giant", code:"300476", secid:"0.300476", theme:"t-cpo", segment:"PCB", segment_en:"PCB", price:0, change:0 },
+  // -- 液冷
+  { id:"s-002837", name:"英维克", name_en:"Envicool", code:"002837", secid:"0.002837", theme:"t-cpo", segment:"液冷", segment_en:"Liquid Cooling", price:0, change:0 },
+  { id:"s-300499", name:"高澜股份", name_en:"Goaland", code:"300499", secid:"0.300499", theme:"t-cpo", segment:"液冷", segment_en:"Liquid Cooling", price:0, change:0 },
+  { id:"s-301128", name:"强瑞技术", name_en:"Qiangrui Tech", code:"301128", secid:"0.301128", theme:"t-cpo", segment:"液冷", segment_en:"Liquid Cooling", price:0, change:0 },
+  // 固态电池 (Solid-State Battery)
+  // -- 电池/整线
+  { id:"s-300750", name:"宁德时代", name_en:"CATL", code:"300750", secid:"0.300750", theme:"t-solid", segment:"电池/整线", segment_en:"Cell / Pack", price:0, change:0 },
+  { id:"s-002074", name:"国轩高科", name_en:"Gotion High-tech", code:"002074", secid:"0.002074", theme:"t-solid", segment:"电池/整线", segment_en:"Cell / Pack", price:0, change:0 },
+  { id:"s-300014", name:"亿纬锂能", name_en:"EVE Energy", code:"300014", secid:"0.300014", theme:"t-solid", segment:"电池/整线", segment_en:"Cell / Pack", price:0, change:0 },
+  // -- 电解质
+  { id:"s-603663", name:"三祥新材", name_en:"Sanxiang Advanced Materials", code:"603663", secid:"1.603663", theme:"t-solid", segment:"电解质", segment_en:"Electrolyte", price:0, change:0 },
+  { id:"s-603200", name:"上海洗霸", name_en:"Shanghai Xiba", code:"603200", secid:"1.603200", theme:"t-solid", segment:"电解质", segment_en:"Electrolyte", price:0, change:0 },
+  { id:"s-002709", name:"天赐材料", name_en:"Tinci Materials", code:"002709", secid:"0.002709", theme:"t-solid", segment:"电解质", segment_en:"Electrolyte", price:0, change:0 },
+  // -- 正极/负极
+  { id:"s-688005", name:"容百科技", name_en:"Ronbay Technology", code:"688005", secid:"1.688005", theme:"t-solid", segment:"正极/负极", segment_en:"Cathode / Anode", price:0, change:0 },
+  { id:"s-300073", name:"当升科技", name_en:"Easpring", code:"300073", secid:"0.300073", theme:"t-solid", segment:"正极/负极", segment_en:"Cathode / Anode", price:0, change:0 },
+  { id:"s-002812", name:"恩捷股份", name_en:"Senior Technology", code:"002812", secid:"0.002812", theme:"t-solid", segment:"正极/负极", segment_en:"Cathode / Anode", price:0, change:0 },
+  // 人形机器人 (Humanoid Robots)
+  // -- 减速器
+  { id:"s-688017", name:"绿的谐波", name_en:"Leader Harmonious Drive", code:"688017", secid:"1.688017", theme:"t-robot", segment:"减速器", segment_en:"Reducers", price:0, change:0 },
+  { id:"s-002472", name:"双环传动", name_en:"Shuanghuan Driveline", code:"002472", secid:"0.002472", theme:"t-robot", segment:"减速器", segment_en:"Reducers", price:0, change:0 },
+  { id:"s-300124", name:"汇川技术", name_en:"Inovance", code:"300124", secid:"0.300124", theme:"t-robot", segment:"减速器", segment_en:"Reducers", price:0, change:0 },
+  // -- 电机/执行器
+  { id:"s-603728", name:"鸣志电器", name_en:"MOONS' Electric", code:"603728", secid:"1.603728", theme:"t-robot", segment:"电机/执行器", segment_en:"Motors / Actuators", price:0, change:0 },
+  { id:"s-300607", name:"拓斯达", name_en:"Topstar Technology", code:"300607", secid:"0.300607", theme:"t-robot", segment:"电机/执行器", segment_en:"Motors / Actuators", price:0, change:0 },
+  { id:"s-002896", name:"中大力德", name_en:"Zhongda Leader", code:"002896", secid:"0.002896", theme:"t-robot", segment:"电机/执行器", segment_en:"Motors / Actuators", price:0, change:0 },
+  // -- 传感器
+  { id:"s-688322", name:"奥比中光", name_en:"Orbbec", code:"688322", secid:"1.688322", theme:"t-robot", segment:"传感器", segment_en:"Sensors", price:0, change:0 },
+  { id:"s-300007", name:"汉威科技", name_en:"Hanwei Electronics", code:"300007", secid:"0.300007", theme:"t-robot", segment:"传感器", segment_en:"Sensors", price:0, change:0 },
+  { id:"s-688286", name:"敏芯股份", name_en:"MEMSensing", code:"688286", secid:"1.688286", theme:"t-robot", segment:"传感器", segment_en:"Sensors", price:0, change:0 },
+  // 低空经济 (Low-Altitude Economy)
+  // -- 整机/eVTOL
+  { id:"s-002085", name:"万丰奥威", name_en:"Wanfeng Auto Wheel", code:"002085", secid:"0.002085", theme:"t-evtol", segment:"整机/eVTOL", segment_en:"Aircraft / eVTOL", price:0, change:0 },
+  { id:"s-300900", name:"广联航空", name_en:"Guanglian Aviation", code:"300900", secid:"0.300900", theme:"t-evtol", segment:"整机/eVTOL", segment_en:"Aircraft / eVTOL", price:0, change:0 },
+  { id:"s-688070", name:"纵横股份", name_en:"JOUAV", code:"688070", secid:"1.688070", theme:"t-evtol", segment:"整机/eVTOL", segment_en:"Aircraft / eVTOL", price:0, change:0 },
+  // -- 动力系统
+  { id:"s-001696", name:"宗申动力", name_en:"Zongshen Power", code:"001696", secid:"0.001696", theme:"t-evtol", segment:"动力系统", segment_en:"Powertrain", price:0, change:0 },
+  { id:"s-002460", name:"赣锋锂业", name_en:"Ganfeng Lithium", code:"002460", secid:"0.002460", theme:"t-evtol", segment:"动力系统", segment_en:"Powertrain", price:0, change:0 },
+  { id:"s-300034", name:"钢研高纳", name_en:"Gaona Aero Material", code:"300034", secid:"0.300034", theme:"t-evtol", segment:"动力系统", segment_en:"Powertrain", price:0, change:0 },
+  // -- 运营/空管
+  { id:"s-000099", name:"中信海直", name_en:"CITIC Offshore Helicopter", code:"000099", secid:"0.000099", theme:"t-evtol", segment:"运营/空管", segment_en:"Ops / ATC", price:0, change:0 },
+  { id:"s-600372", name:"中航机载", name_en:"AVIC Airborne", code:"600372", secid:"1.600372", theme:"t-evtol", segment:"运营/空管", segment_en:"Ops / ATC", price:0, change:0 },
+  { id:"s-002097", name:"山河智能", name_en:"Sunward", code:"002097", secid:"0.002097", theme:"t-evtol", segment:"运营/空管", segment_en:"Ops / ATC", price:0, change:0 },
+  // 半导体设备 (Semiconductor Equipment)
+  // -- 刻蚀/薄膜
+  { id:"s-002371", name:"北方华创", name_en:"NAURA Technology", code:"002371", secid:"0.002371", theme:"t-semi", segment:"刻蚀/薄膜", segment_en:"Etch / Thin-film", price:0, change:0 },
+  { id:"s-688012", name:"中微公司", name_en:"AMEC", code:"688012", secid:"1.688012", theme:"t-semi", segment:"刻蚀/薄膜", segment_en:"Etch / Thin-film", price:0, change:0 },
+  { id:"s-688072", name:"拓荆科技", name_en:"Piotech", code:"688072", secid:"1.688072", theme:"t-semi", segment:"刻蚀/薄膜", segment_en:"Etch / Thin-film", price:0, change:0 },
+  // -- 清洗/涂胶
+  { id:"s-688082", name:"盛美上海", name_en:"ACM Research", code:"688082", secid:"1.688082", theme:"t-semi", segment:"清洗/涂胶", segment_en:"Clean / Coating", price:0, change:0 },
+  { id:"s-688120", name:"华海清科", name_en:"Hwatsing", code:"688120", secid:"1.688120", theme:"t-semi", segment:"清洗/涂胶", segment_en:"Clean / Coating", price:0, change:0 },
+  { id:"s-300604", name:"长川科技", name_en:"Chn Automation", code:"300604", secid:"0.300604", theme:"t-semi", segment:"清洗/涂胶", segment_en:"Clean / Coating", price:0, change:0 },
+  // -- 零部件/材料
+  { id:"s-002409", name:"雅克科技", name_en:"Yoke Technology", code:"002409", secid:"0.002409", theme:"t-semi", segment:"零部件/材料", segment_en:"Parts / Materials", price:0, change:0 },
+  { id:"s-300346", name:"南大光电", name_en:"Nata Opto", code:"300346", secid:"0.300346", theme:"t-semi", segment:"零部件/材料", segment_en:"Parts / Materials", price:0, change:0 },
+  { id:"s-688037", name:"芯源微", name_en:"Kingsemi", code:"688037", secid:"1.688037", theme:"t-semi", segment:"零部件/材料", segment_en:"Parts / Materials", price:0, change:0 },
+  // 创新药 (Innovative Drugs)
+  // -- 创新药企
+  { id:"s-600276", name:"恒瑞医药", name_en:"Hengrui Pharma", code:"600276", secid:"1.600276", theme:"t-pharma", segment:"创新药企", segment_en:"Biopharma", price:0, change:0 },
+  { id:"s-688235", name:"百济神州", name_en:"BeiGene", code:"688235", secid:"1.688235", theme:"t-pharma", segment:"创新药企", segment_en:"Biopharma", price:0, change:0 },
+  { id:"s-688192", name:"迪哲医药", name_en:"Dizal Pharma", code:"688192", secid:"1.688192", theme:"t-pharma", segment:"创新药企", segment_en:"Biopharma", price:0, change:0 },
+  // -- CXO/外包
+  { id:"s-300759", name:"康龙化成", name_en:"Pharmaron", code:"300759", secid:"0.300759", theme:"t-pharma", segment:"CXO/外包", segment_en:"CXO / CRO", price:0, change:0 },
+  { id:"s-603259", name:"药明康德", name_en:"WuXi AppTec", code:"603259", secid:"1.603259", theme:"t-pharma", segment:"CXO/外包", segment_en:"CXO / CRO", price:0, change:0 },
+  { id:"s-300347", name:"泰格医药", name_en:"Tigermed", code:"300347", secid:"0.300347", theme:"t-pharma", segment:"CXO/外包", segment_en:"CXO / CRO", price:0, change:0 },
+  // -- 生物药/器械
+  { id:"s-688520", name:"神州细胞", name_en:"Sinocelltech", code:"688520", secid:"1.688520", theme:"t-pharma", segment:"生物药/器械", segment_en:"Biologics / Devices", price:0, change:0 },
+  { id:"s-300363", name:"博腾股份", name_en:"Porton", code:"300363", secid:"0.300363", theme:"t-pharma", segment:"生物药/器械", segment_en:"Biologics / Devices", price:0, change:0 },
+  { id:"s-002821", name:"凯莱英", name_en:"Asymchem", code:"002821", secid:"0.002821", theme:"t-pharma", segment:"生物药/器械", segment_en:"Biologics / Devices", price:0, change:0 },
+  // 其他（默认折叠，弱关联）
+  { id:"s-600519", name:"贵州茅台", name_en:"Kweichow Moutai", code:"600519", secid:"1.600519", theme:null, price:0, change:0 },
+  { id:"s-601318", name:"中国平安", name_en:"Ping An Insurance", code:"601318", secid:"1.601318", theme:null, price:0, change:0 },
+];
+
+const NODES = [
+  ...THEMES.map(t=>({ id:t.id, name:t.name, type:'theme', tone:t.tone, desc:t.desc, segments:t.segments })),
+  // 个股节点直接引用 STOCKS 原对象（挂载价格字段），行情更新后自动同步
+  ...STOCKS.map(s=>({ id:s.id, name:s.name, code:s.code, type:'stock', theme:s.theme, _stock:s })),
+];
+
+// 关系边：运行时根据 STOCKS 动态生成（题材→个股 chain，同环节 supply，跨环节 supply/compete）
+function buildEdges(){
+  const edges = [];
+  // 1. 题材 -> 个股（产业链映射关联）
+  THEMES.forEach(th=>{
+    STOCKS.filter(s=>s.theme===th.id).forEach(s=>{
+      edges.push({ source:th.id, target:s.id, type:'chain', today:false });
+    });
+  });
+  // 2. 同环节内个股：供应协作（supply）
+  THEMES.forEach(th=>{
+    const segs = {};
+    STOCKS.filter(s=>s.theme===th.id).forEach(s=>{
+      (segs[s.segment]=segs[s.segment]||[]).push(s);
+    });
+    Object.values(segs).forEach(list=>{
+      for(let i=0;i<list.length;i++){
+        for(let j=i+1;j<list.length;j++){
+          edges.push({ source:list[i].id, target:list[j].id, type:'supply', today:false });
+        }
+      }
+    });
+  });
+  // 3. 相邻环节之间：上下游（supply）
+  THEMES.forEach(th=>{
+    const segOrder = (th.segments||[]).map(s=>s[0]);
+    segOrder.forEach((seg,idx)=>{
+      if(idx===segOrder.length-1) return;
+      const upstream = STOCKS.filter(s=>s.theme===th.id && s.segment===seg);
+      const downstream = STOCKS.filter(s=>s.theme===th.id && s.segment===segOrder[idx+1]);
+      upstream.forEach(u=>{
+        downstream.forEach(d=>{
+          edges.push({ source:u.id, target:d.id, type:'supply', today:false });
+        });
+      });
+    });
+  });
+  // 4. 其他（默认折叠）
+  edges.push({ source:'t-cpo', target:'s-600519', type:'other', today:false });
+  edges.push({ source:'t-pharma', target:'s-601318', type:'other', today:false });
+  return edges;
+}
+
+const EDGE_TYPES = {
+  news:    { label:'直接新闻刺激', color:PALETTE.up,   visible:true },
+  chain:   { label:'产业链映射关联', color:PALETTE.cyan, visible:true },
+  supply:  { label:'供应 / 客户',  color:PALETTE.violet,visible:true },
+  compete: { label:'竞争 / 待验证', color:PALETTE.gold, visible:true },
+  other:   { label:'其他（默认折叠）', color:PALETTE.faint, visible:false },
+};
+// 边类型 -> CSS 变量名（供图谱 SVG 跟随主题）
+const EDGE_VAR = { news:'--up', chain:'--cyan', supply:'--violet', compete:'--gold', other:'--faint' };
+
+// 指数（行情快照）
+const INDICES = [
+  { name:'上证指数', name_en:'SSE Composite', secid:'1.000001', price:3512.34, change:0.42 },
+  { name:'深证成指', name_en:'SZSE Component', secid:'0.399001', price:10842.11, change:0.87 },
+  { name:'创业板指', name_en:'ChiNext',        secid:'0.399006', price:2316.55, change:1.34 },
+  { name:'科创50',   name_en:'STAR 50',        secid:'1.000688', price:1022.08, change:2.11 },
+  { name:'沪深300',  name_en:'CSI 300',        secid:'1.000300', price:3912.70, change:0.56 },
+];
+
+// 简报
+// 事件流
+const EVENTS = [
+  { rank:'重磅', tag:'海外催化', time:'09:41', title:'海外大厂上调明年算力资本开支指引，CPO 渗透率预期上修',
+    desc:'头部云厂商最新财报指引显示 AI 算力投入持续加码，市场对 800G / 1.6T 光模块与共封装光学需求预期再度上调。',
+    rel:['s-300308','s-300502','t-cpo'], today:true },
+  { rank:'重磅', tag:'政策', time:'09:18', title:'发改委：加快算力基础设施建设，绿色数据中心再获政策加码',
+    desc:'政策明确推进全国一体化算力网与绿色低碳数据中心建设，算力基础设施与液冷环节获关注。',
+    rel:['t-cpo'], today:true },
+  { rank:'重要', tag:'公告', time:'09:02', title:'中际旭创：800G 订单饱满，Q4 排产已排至明年一季度',
+    desc:'公司在互动平台表示 800G 光模块产能持续爬坡，订单能见度较高，机构关注 CPO 布局进展。',
+    rel:['s-300308','t-cpo'], today:true },
+  { rank:'重要', tag:'资金', time:'10:15', title:'北向资金连续 5 日净买入算力板块，成交占比显著抬升',
+    desc:'数据显示北向资金近期持续加仓光模块与算力相关标的，板块成交活跃度提升。',
+    rel:['t-cpo','s-300502'], today:true },
+  { rank:'重要', tag:'行业', time:'10:30', title:'固态电池中试线良率突破，上游材料端密集获机构调研',
+    desc:'半固态电池中试良率阶段性突破，机构近期密集调研电解质与硅碳负极相关企业。',
+    rel:['t-solid','s-603663'], today:true },
+  { rank:'重要', tag:'行业', time:'10:52', title:'人形机器人厂商披露量产规划，核心零部件环节受关注',
+    desc:'头部厂商披露 2027 年量产目标，减速器、丝杠、传感器等环节获资金聚焦。',
+    rel:['t-robot','s-300607'], today:true },
+  { rank:'一般', tag:'行业', time:'11:06', title:'创新药出海再下一城，某双抗 License-out 达成',
+    desc:'国产创新药 License-out 持续落地，出海逻辑与临床数据催化受关注。',
+    rel:['t-pharma','s-688235'], today:true },
+  { rank:'一般', tag:'公告', time:'昨日', title:'半导体设备龙头发布中报：订单增速放缓，板块短期承压',
+    desc:'国产设备龙头中报订单增速边际放缓，板块今日走弱，关注后续招标节奏。',
+    rel:['t-semi','s-002371'], today:false },
+];
+
+// 复盘
+const REVIEWS = [
+  { date:'2026-11-06', theme:'算力 / CPO', theme_en:'AI Computing / CPO', judgment:'判断光模块主线延续，800G 需求上修', judgment_en:'Expected optical module theme to continue on 800G demand upgrade', result:'+3.82%', verdict:'hit', note:'主线命中，龙头领涨', note_en:'Main theme hit; leaders rallied' },
+  { date:'2026-11-05', theme:'固态电池', theme_en:'Solid-State Battery', judgment:'判断材料端先行，关注中试进展', judgment_en:'Expected materials to lead; watch pilot-line progress', result:'+1.45%', verdict:'part', note:'部分命中，涨幅温和', note_en:'Partial hit; moderate gains' },
+  { date:'2026-11-04', theme:'半导体设备', theme_en:'Semiconductor Equipment', judgment:'判断订单增速修复，板块反弹', judgment_en:'Expected order growth recovery and rebound', result:'-1.20%', verdict:'miss', note:'判断失误，板块继续回调', note_en:'Missed; sector kept correcting' },
+  { date:'2026-11-03', theme:'低空经济', theme_en:'Low-Altitude Economy', judgment:'判断政策催化，整机链条活跃', judgment_en:'Expected policy catalyst; aircraft chain active', result:'+2.66%', verdict:'hit', note:'主线命中', note_en:'Main theme hit' },
+  { date:'2026-10-31', theme:'人形机器人', theme_en:'Humanoid Robots', judgment:'判断量产预期升温，核心件受关注', judgment_en:'Expected mass-production expectations to rise', result:'+1.10%', verdict:'part', note:'部分命中，分化明显', note_en:'Partial hit; clear divergence' },
+];
+
+/* ============================================================
+   真实行情数据层（东方财富公开接口）
+   ============================================================ */
+const QUOTE_API = 'https://push2.eastmoney.com/api/qt/ulist.np/get';
+const QUOTE_REFETCH_MS = 15000;   // 行情刷新间隔（秒）
+const QUOTE_FIELDS = 'f2,f3,f12,f14'; // f2 最新价(×100/1000按市场) f3 涨跌幅(×100) f12 代码 f14 名称
+
+const quoteState = {
+  online: false,       // 是否成功连上真实数据源
+  lastUpdate: null,    // 最近一次成功更新时间
+  failCount: 0,        // 连续失败次数
+  timer: null,
+};
+
+// 用统一数组顺序构建 secids，返回 { secids, stocks, indices } 以便回填
+function buildSecids(){
+  const stocks = STOCKS.map(s=>s.secid);
+  const indices = INDICES.map(i=>i.secid);
+  return { list:[...indices, ...stocks], stocks, indices };
+}
+
+// 解析行情：f2 价格、f3 涨跌幅。个股/指数均为 ×100（指数取两位小数）
+function parseQuote(diff){
+  return { price: +(diff.f2/100).toFixed(2), change: +(diff.f3/100).toFixed(2) };
+}
+
+// 拉取并回填行情；返回 Promise<boolean> 是否成功
+async function fetchQuotes(){
+  const { list } = buildSecids();
+  const url = `${QUOTE_API}?secids=${encodeURIComponent(list.join(','))}&fields=${QUOTE_FIELDS}`;
+  // 限流重试：最多 3 次，间隔递增
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const resp = await fetch(url, { cache:'no-store', headers:{'User-Agent':'Mozilla/5.0'} });
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const json = await resp.json();
+      const diff = json && json.data && json.data.diff;
+      if(!Array.isArray(diff) || !diff.length) throw new Error('empty diff');
+      const map = new Map(diff.map(d=>[d.f12, d]));
+      let hit = 0;
+      INDICES.forEach(i=>{ const d = map.get(i.secid.split('.')[1]); if(d){ const q=parseQuote(d); i.price=q.price; i.change=q.change; hit++; } });
+      STOCKS.forEach(s=>{ const d = map.get(s.code); if(d){ const q=parseQuote(d); s.price=q.price; s.change=q.change; hit++; } });
+      if(!hit) throw new Error('no symbol matched');
+      quoteState.online = true;
+      quoteState.lastUpdate = new Date();
+      quoteState.failCount = 0;
+      return true;
+    }catch(err){
+      if(attempt < 2){ await new Promise(r=>setTimeout(r, 800*(attempt+1))); }
+    }
+  }
+  quoteState.failCount++;
+  if(quoteState.failCount >= 2) quoteState.online = false;
+  return false;
+}
+
+// 行情更新后统一刷新受影响视图
+function refreshQuotesUI(){
+  renderTicker();
+  refreshMainLine();
+  refreshGraphQuotes();
+  // 涨跌幅变化后重新判定「今日催化」，更新关系线
+  markCatalystEdges();
+  if(graphState.lanes){
+    // 更新节点上的「今日」标记
+    graphState.lanes.querySelectorAll('.graph-node').forEach(el=>{
+      const s = STOCKS.find(x=>x.id===el.dataset.id);
+      if(!s) return;
+      const hotTag = el.querySelector('.hot-tag');
+      const isHot = graphState.edges.some(e=>e.type==='news' && e.today && e.target===s.id);
+      if(isHot && !hotTag){
+        el.querySelector('.node-meta').insertAdjacentHTML('afterbegin', '<span class="hot-tag">'+t('tagToday')+'</span>');
+      } else if(!isHot && hotTag){
+        hotTag.remove();
+      }
+    });
+    // 重绘关系线
+    requestAnimationFrame(()=>drawRelationLines(graphState.locked?.id || null));
+  }
+  if($('#dName').textContent && graphState.locked){
+    // 详情面板打开中，刷新其数值
+    openDetail(graphState.locked);
+  }
+}
+
+// 仅刷新图谱泳道中的涨跌幅数值（不重建 DOM，保留悬停/锁定状态）
+function refreshGraphQuotes(){
+  if(!graphState.lanes) return;
+  // 个股节点涨跌幅
+  graphState.lanes.querySelectorAll('.graph-node').forEach(el=>{
+    const s = STOCKS.find(x=>x.id===el.dataset.id);
+    if(!s) return;
+    const chgEl = el.querySelector('.chg');
+    if(chgEl){
+      chgEl.textContent = fmtChg(s.change);
+      chgEl.className = 'chg ' + (s.change>=0?'up':'down');
+    }
+  });
+  // 泳道头部板块均值
+  graphState.lanes.querySelectorAll('.graph-lane').forEach(lane=>{
+    const thId = lane.dataset.group;
+    const members = STOCKS.filter(s=>s.theme===thId);
+    if(!members.length) return;
+    const avg = members.reduce((a,b)=>a+b.change,0)/members.length;
+    const avgEl = lane.querySelector('.lane-avg');
+    if(avgEl){
+      avgEl.textContent = fmtChg(avg);
+      avgEl.className = 'lane-avg ' + (avg>=0?'up':'down');
+    }
+  });
+}
+
+/* ============================================================
+   题材聚合：用真实行情自动判定主线 / 强势 / 弱势
+   ============================================================ */
+// 计算每个题材的板块统计（基于所属个股的真实涨跌幅）
+function computeThemeStats(){
+  return THEMES.map(theme=>{
+    const members = STOCKS.filter(s=>s.theme===theme.id);
+    if(!members.length) return null;
+    const changes = members.map(s=>s.change);
+    const avg = changes.reduce((a,b)=>a+b,0) / changes.length;
+    const up = members.filter(s=>s.change>0).length;
+    const down = members.filter(s=>s.change<0).length;
+    // 领涨个股（按涨跌幅降序）
+    const leaders = members.slice().sort((a,b)=>b.change-a.change).slice(0,3);
+    // 领跌个股
+    const laggards = members.slice().sort((a,b)=>a.change-b.change).slice(0,1);
+    return {
+      theme,
+      members,
+      avg,
+      up,
+      down,
+      leaders,
+      laggards,
+    };
+  }).filter(Boolean).sort((a,b)=>b.avg-a.avg); // 按平均涨幅降序
+}
+
+// 生成「今日主线」简报卡片（基于真实数据）
+function buildMainLineBrief(stats){
+  if(!stats || !stats.length) return null;
+  const top = stats[0];
+  const lead = top.leaders[0];
+  const chips = [
+    ...top.leaders.map(l=>({ s:l.id, c:'hot' })),
+    { t:`${t('avgChip')} ${fmtChg(top.avg)}`, c:'cy' },
+  ];
+  let title, body;
+  if(LANG==='en'){
+    title = `${lname(top.theme)}: ${top.up>=top.members.length/2?'Leading':'Relatively strong'}`;
+    body = `${lname(top.theme)}: ${top.up} of ${top.members.length} constituents up, ${top.down} down, sector avg ${fmtChg(top.avg)}${lead?', '+lname(lead)+' leading '+fmtChg(lead.change):''}. ${ldesc(top.theme)}`;
+  }else{
+    title = `${top.theme.name}：${top.up>=top.members.length/2?'领涨':'相对强势'}`;
+    body = `${top.theme.name}板块 ${top.members.length} 只成分股中 ${top.up} 涨 ${top.down} 跌，板块平均${fmtChg(top.avg)}，${lead?lead.name+'领涨 '+fmtChg(lead.change):''}。${top.theme.desc}。`;
+  }
+  return { kicker:t('mainLineLabel'), title, body, chips, hero:true };
+}
+
+// 生成强势题材卡片（第 2、3 名）
+function buildStrongBrief(stat, idx){
+  const chips = [
+    ...stat.leaders.slice(0,2).map(l=>({ s:l.id, c:'hot' })),
+    { t:`${t('avgChip')} ${fmtChg(stat.avg)}`, c:'cy' },
+  ];
+  let title, body;
+  if(LANG==='en'){
+    title = `${lname(stat.theme)}: ${stat.avg>=0?'Gaining':'Diverging'}`;
+    body = `${lname(stat.theme)}: ${stat.members.length} constituents, sector avg ${fmtChg(stat.avg)}${stat.leaders[0]?', '+lname(stat.leaders[0])+' '+fmtChg(stat.leaders[0].change):''} leading. ${ldesc(stat.theme)}`;
+  }else{
+    title = `${stat.theme.name}：${stat.avg>=0?'走强':'分化'}`;
+    body = `${stat.theme.name}板块 ${stat.members.length} 只成分股平均${fmtChg(stat.avg)}，${stat.leaders[0]?stat.leaders[0].name+' '+fmtChg(stat.leaders[0].change):''}领涨。${stat.theme.desc}。`;
+  }
+  return { kicker:t('strongTheme'), title, body, chips, hero:false };
+}
+
+// 生成弱势/风险提示卡片（第末名）
+function buildRiskBrief(stat){
+  const chips = [
+    ...stat.laggards.map(l=>({ s:l.id, c:'gold' })),
+    { t:`${t('avgChip')} ${fmtChg(stat.avg)}`, c:'gold' },
+  ];
+  let title, body;
+  if(LANG==='en'){
+    title = `${lname(stat.theme)}: Under pressure`;
+    body = `${lname(stat.theme)} sector avg ${fmtChg(stat.avg)}${stat.laggards[0]?', '+lname(stat.laggards[0])+' '+fmtChg(stat.laggards[0].change):''} lagging. ${t('riskBody')}`;
+  }else{
+    title = `${stat.theme.name}：板块承压`;
+    body = `${stat.theme.name}板块平均${fmtChg(stat.avg)}，${stat.laggards[0]?stat.laggards[0].name+' '+fmtChg(stat.laggards[0].change):''}领跌。${t('riskBody')}`;
+  }
+  return { kicker:t('riskTheme'), title, body, chips, hero:false };
+}
+
+// 用真实行情动态生成简报并更新「今日主线」标签
+function refreshMainLine(){
+  const stats = computeThemeStats();
+  if(!stats || !stats.length) return;
+  // 顶部「今日主线」标签
+  const top = stats[0];
+  $('#mainLine').textContent = lname(top.theme);
+  const locale = LANG==='en' ? 'en-US' : 'zh-CN';
+  $('#reportDate').textContent = new Date().toLocaleDateString(locale,{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
+
+  // 动态生成简报卡片
+  const cards = [];
+  cards.push(buildMainLineBrief(stats));
+  if(stats[1]) cards.push(buildStrongBrief(stats[1],1));
+  if(stats[2]) cards.push(buildStrongBrief(stats[2],2));
+  const risk = stats[stats.length-1];
+  if(risk && risk.avg < stats[0].avg) cards.push(buildRiskBrief(risk));
+
+  // 渲染到 briefGrid
+  const grid = $('#briefGrid');
+  grid.innerHTML = cards.map((b,i)=>`
+    <div class="card ${b.hero?'hero':''}">
+      <div class="kicker">${esc(b.kicker)}</div>
+      <h3>${esc(b.title)}</h3>
+      <p>${esc(b.body)}</p>
+      <div class="chip-row">${b.chips.map(c=>{
+        if(c.s){
+          const s = STOCKS.find(x=>x.id===c.s);
+          return `<span class="chip ${c.c}">${esc(s?lname(s)+' '+fmtChg(s.change):'')}</span>`;
+        }
+        return `<span class="chip ${c.c}">${esc(c.t)}</span>`;
+      }).join('')}</div>
+    </div>`).join('');
+}
+
+/* ============================================================
+   真实快讯数据层（东方财富 7x24 快讯）
+   ============================================================ */
+const NEWS_API = 'https://np-listapi.eastmoney.com/comm/web/getFastNewsList';
+const NEWS_REFETCH_MS = 30000;   // 快讯刷新间隔
+const NEWS_PAGE_SIZE = 12;
+
+// 快讯标题 -> 重要性判定（粗粒度启发式）
+function rankOfNews(title){
+  const t = title || '';
+  if(/涨停|跌停|涨停潮|大涨|大跌|突发|重磅|央行|证监会|国常会|降准|降息|历史新高|涨停潮/.test(t)) return '重磅';
+  if(/涨超|跌超|净流入|净流出|中标|订单|签约|获批|通过|发布|回应|调研/.test(t)) return '重要';
+  return '一般';
+}
+
+// 快讯 tag 判定
+function tagOfNews(title){
+  const t = title || '';
+  if(/央行|证监会|发改委|国常会|财政部|政策|发布|通知/.test(t)) return '政策';
+  if(/中标|订单|签约|合同|业绩|回购|增持|减持|停牌|复牌/.test(t)) return '公告';
+  if(/涨停|跌停|涨超|跌超|反弹|走强|走弱/.test(t)) return '行情';
+  if(/净流入|净流出|ETF|资金|北向|两融|融资/.test(t)) return '资金';
+  if(/调研|机构|研报|评级/.test(t)) return '研报';
+  return '快讯';
+}
+
+// 把快讯的 stockList（如 "1.603228","0.301248"）映射到本工作台的个股 id
+function mapStockList(stockList){
+  if(!Array.isArray(stockList)) return [];
+  const ids = [];
+  for(const secid of stockList){
+    const code = String(secid).split('.')[1];
+    const s = STOCKS.find(x=>x.code===code);
+    if(s) ids.push(s.id);
+  }
+  return ids;
+}
+
+// 判断快讯是否 A 股相关
+// 市场前缀：0=深市 1=沪市 90=A股板块（东方财富 f13 字段约定）
+const A_SHARE_PREFIX = new Set(['0','1','90']);
+const A_SHARE_RE = /A股|沪深|两市|沪指|深成指|创业板|科创板|北证|涨停|跌停|板块|概念|ETF|成交额|龙虎榜|机构调研|个股|上市公司|券商|央行|证监会|发改委|国常会|降准|降息|LPR|人民币|债市|碳酸锂|稀土|黄金|原油|商品|基金/;
+const FOREIGN_RE = /韩国|越南|美国|特朗普|白宫|苏伊士|印尼|纳斯达克|美股|港股|恒生|苹果|英伟达|台积电|SK海力士|三星|日经|欧洲|美联储|道指|标普|布伦特|WTI|伦敦|东京|首尔|莫斯科|德银|日元|韩元|欧元|美元指数|港股通|港股通/;
+
+function isAShareNews(item){
+  const title = (item.title || '').replace(/<[^>]+>/g,'').trim();
+  const sl = item.stockList || [];
+  // 强海外主体：无论是否挂了 A 股关联，标题直指海外则排除
+  if(FOREIGN_RE.test(title)) return false;
+  // 1) 有股票关联：至少一个 A 股前缀
+  if(sl.length){
+    return sl.some(s=>A_SHARE_PREFIX.has(String(s).split('.')[0]));
+  }
+  // 2) 无股票关联：标题命中 A 股关键词
+  return A_SHARE_RE.test(title);
+}
+
+// 拉取快讯并注入事件流；返回 Promise<boolean>
+async function fetchNews(){
+  const url = `${NEWS_API}?client=web&biz=web_724&fastColumn=102&pageSize=${NEWS_PAGE_SIZE}&sortEnd=&req_trace=${Date.now()}`;
+  try{
+    const resp = await fetch(url, { cache:'no-store', headers:{'User-Agent':'Mozilla/5.0'} });
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const json = await resp.json();
+    const list = json && json.data && json.data.fastNewsList;
+    if(!Array.isArray(list) || !list.length) throw new Error('empty news');
+    // 按时间降序（接口已排，但保险）
+    const sorted = list.slice().sort((a,b)=>(b.realSort||0)-(a.realSort||0));
+    let added = 0;
+    for(const item of sorted){
+      // 聚焦 A 股：过滤掉港股/美股/韩股/海外宏观等
+      if(!isAShareNews(item)) continue;
+      const title = (item.title || '').replace(/<[^>]+>/g,'').trim();
+      const desc = (item.summary || '').replace(/<[^>]+>/g,'').trim();
+      if(!title) continue;
+      // 去重（用 code 唯一 id）
+      if(EVENTS.some(e=>e.code===item.code)) continue;
+      const time = (item.showTime || '').slice(11,16) || new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
+      EVENTS.unshift({
+        code:item.code,
+        rank:rankOfNews(title),
+        tag:tagOfNews(title),
+        time,
+        title,
+        desc:desc || title,
+        rel:mapStockList(item.stockList),
+        today:true,
+      });
+      added++;
+    }
+    if(EVENTS.length > EVENTS_MAX) EVENTS.length = EVENTS_MAX;
+    if(added>0){
+      renderEvents();
+      // 英文模式：异步翻译新增快讯
+      if(LANG==='en') translateEvents();
+    }
+    return added>0;
+  }catch(err){
+    return false;
+  }
+}
+
+/* ============================================================
+   主题切换（白天 / 黑夜）
+   ============================================================ */
+const THEME_KEY = 'quant-theme';
+const SUN_ICON = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+function currentTheme(){ return document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark'; }
+function applyTheme(t, save){
+  if(t==='light'){ document.documentElement.setAttribute('data-theme','light'); }
+  else { document.documentElement.removeAttribute('data-theme'); }
+  if(save){ try{ localStorage.setItem(THEME_KEY, t); }catch(e){} }
+  syncThemeUI();
+}
+function syncThemeUI(){
+  const light = currentTheme()==='light';
+  const icon = document.querySelector('#themeIcon');
+  const label = document.querySelector('#themeLabel');
+  if(icon) icon.innerHTML = light ? SUN_ICON : MOON_ICON;
+  if(label) label.textContent = light ? t('themeNight') : t('themeDay');
+  // 图谱 SVG 颜色已改用 CSS 变量，主题切换后自动生效（无需重绘）
+}
+function toggleTheme(){
+  applyTheme(currentTheme()==='light' ? 'dark' : 'light', true);
+}
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtChg = c => (c>0?'+':'')+c.toFixed(2)+'%';
+const chgCls = c => c>0?'up':(c<0?'down':'flat');
+const nowStr = () => new Date().toLocaleString('zh-CN',{hour12:false});
+
+/* ============================================================
+   星空背景
+   ============================================================ */
+(function stars(){
+  const cv = $('#stars'); const ctx = cv.getContext('2d');
+  let W,H,pts;
+  function resize(){ W=cv.width=innerWidth; H=cv.height=innerHeight; gen(); }
+  function gen(){ pts=Array.from({length:140},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.2,a:Math.random()*.7+.15,s:Math.random()*.5+.2})); }
+  let t=0;
+  function starRGB(){
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--star').trim();
+    return v || '150,180,255';
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H); t+=.01;
+    const rgb = starRGB();
+    for(const p of pts){
+      const a = p.a * (0.6 + 0.4*Math.sin(t*p.s));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fillStyle=`rgba(${rgb},${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize(); addEventListener('resize',resize); draw();
+})();
+
+/* ============================================================
+   行情快照滚动条
+   ============================================================ */
+const tickerEl = $('#ticker-track');
+function renderTicker(){
+  const items = [...INDICES.map(i=>({n:lname(i),p:i.price.toFixed(2),c:i.change})),
+    ...STOCKS.filter(s=>s.theme).slice(0,10).map(s=>({n:lname(s),p:s.price.toFixed(2),c:s.change}))];
+  tickerEl.innerHTML = items.concat(items).map(it=>
+    `<span class="tk"><span class="n">${esc(it.n)}</span><span class="p">${it.p}</span><span class="c ${chgCls(it.c)}">${fmtChg(it.c)}</span></span>`
+  ).join('');
+}
+function animateTicker(){
+  const w = tickerEl.scrollWidth/2; let x=0;
+  (function loop(ts){
+    if(!tickerEl.dataset.last) tickerEl.dataset.last=ts;
+    const dt = ts - (+tickerEl.dataset.last); tickerEl.dataset.last=ts;
+    x -= dt*0.02; if(x<=-w) x+=w;
+    tickerEl.style.transform = `translateX(${x}px)`;
+    requestAnimationFrame(loop);
+  })(performance.now());
+}
+
+/* ============================================================
+   事件流渲染
+   ============================================================ */
+let evFilter = '全部';
+// 中文 rank/tag 值 -> i18n key
+const RANK_KEY = { '重磅':'rankMajor', '重要':'rankImportant', '一般':'rankNormal', '全部':'rankAll' };
+const TAG_KEY = { '政策':'tagPolicy', '公告':'tagAnnounce', '行情':'tagMarket', '资金':'tagFund', '研报':'tagResearch', '快讯':'tagFlash', '海外催化':'tagOverseas', '行业':'tagIndustry', '龙虎榜':'tagFund' };
+function lrank(r){ return t(RANK_KEY[r] || r); }
+function ltag(r){ return t(TAG_KEY[r] || r); }
+
+function renderEvents(){
+  const cats = ['全部','重磅','重要','一般'];
+  $('#evFilters').innerHTML = cats.map(c=>`<button class="fbtn ${c===evFilter?'active':''}" data-cat="${c}">${lrank(c)}</button>`).join('');
+  const list = EVENTS.filter(e=>evFilter==='全部'||e.rank===evFilter);
+  $('#eventList').innerHTML = list.map((e,i)=>`
+    <div class="event" data-id="${i}">
+      <div class="ev-rank rank-${e.rank}">${e.rank==='重磅'?'★★':e.rank==='重要'?'★':'•'}</div>
+      <div class="ev-body">
+        <div class="ev-top">
+          <span class="ev-tag">${esc(ltag(e.tag))}</span>
+          <span class="ev-time">${esc(e.time)}</span>
+          ${e.today?'<span class="ev-tag" style="color:var(--cyan);border-color:rgba(56,189,248,.4)">'+t('tagToday')+'</span>':''}
+        </div>
+        <div class="ev-title" data-code="${e.code||''}">${esc(levent(e,'title'))}</div>
+        <div class="ev-desc" data-code="${e.code||''}">${esc(levent(e,'desc'))}</div>
+        <div class="ev-rel">${(e.rel||[]).map(r=>`<span class="rel" data-node="${r}">${esc(nodeName(r))} →</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+function nodeName(id){ const n=NODES.find(x=>x.id===id); return n?lname(n):id; }
+
+/* ============================================================
+   复盘渲染
+   ============================================================ */
+function renderReview(){
+  const vtxt={hit:t('verHit'),part:t('verPart'),miss:t('verMiss')};
+  $('#reviewTable').innerHTML = `
+    <tr><th>${t('reviewDate')}</th><th>${t('reviewTheme')}</th><th>${t('reviewJudgment')}</th><th>${t('reviewNext')}</th><th>${t('reviewResult')}</th></tr>` +
+    REVIEWS.map(r=>`
+      <tr>
+        <td class="num">${r.date}</td>
+        <td>${esc(LANG==='en'?r.theme_en:r.theme)}</td>
+        <td style="color:var(--muted)">${esc(LANG==='en'?r.judgment_en:r.judgment)}</td>
+        <td class="num ${chgCls(parseFloat(r.result))}">${r.result}</td>
+        <td><span class="verdict ${r.verdict}">${vtxt[r.verdict]}</span> <span style="color:var(--faint);font-size:12px">${esc(LANG==='en'?r.note_en:r.note)}</span></td>
+      </tr>`).join('');
+}
+
+/* ============================================================
+   产业链图谱（泳道分组布局 + SVG 关系线）
+   ============================================================ */
+const graphState = {
+  nodes: [], edges: [],
+  hover: null, locked: null,
+  viewMode: 'all', // all | today
+};
+
+function graphInit(){
+  graphState.svg = $('#graph');
+  graphState.lanes = $('#graphLanes');
+}
+
+// 题材 -> 泳道图标
+const GROUP_ICON = { 't-cpo':'⚡', 't-solid':'🔋', 't-robot':'🤖', 't-evtol':'✈️', 't-semi':'🔬', 't-pharma':'💊' };
+
+function graphBuild(){
+  graphState.nodes = NODES.map(n=>({ ...n, deg:0 }));
+  graphState.edges = buildEdges();
+  graphState.edges.forEach(e=>{
+    const a=graphState.nodes.find(n=>n.id===e.source); const b=graphState.nodes.find(n=>n.id===e.target);
+    if(a)a.deg++; if(b)b.deg++;
+  });
+  markCatalystEdges();
+}
+
+// 标记「今日催化」：每个题材涨跌幅前 2 名的个股 -> news 边
+function markCatalystEdges(){
+  // 先把所有 news 边还原为 chain
+  graphState.edges.forEach(e=>{ if(e.type==='news'){ e.type='chain'; e.today=false; } });
+  THEMES.forEach(th=>{
+    const members = STOCKS.filter(s=>s.theme===th.id).sort((a,b)=>b.change-a.change);
+    members.slice(0,2).forEach(s=>{
+      const e = graphState.edges.find(x=>x.source===th.id && x.target===s.id);
+      if(e){ e.type='news'; e.today=true; }
+    });
+  });
+}
+
+function nodeChange(n){
+  if(n.type!=='stock') return 0;
+  const s = n._stock || STOCKS.find(x=>x.id===n.id);
+  return s ? s.change : 0;
+}
+
+function edgeVisible(e){
+  if(graphState.viewMode==='today') return e.today && EDGE_TYPES[e.type].visible;
+  return EDGE_TYPES[e.type].visible;
+}
+
+// 某节点相关的可见边
+function nodeEdges(n){
+  return graphState.edges.filter(e=>e.source===n.id||e.target===n.id).filter(edgeVisible);
+}
+
+// 判断节点是否「今日有催化」（有 today 的边）
+function nodeIsHot(n){
+  return graphState.edges.some(e=>(e.source===n.id||e.target===n.id) && e.today);
+}
+
+// 节点在该题材组内的事件数（用相关边数近似）
+function nodeEventCount(n){
+  return nodeEdges(n).length;
+}
+
+function graphApplyVisibility(){
+  const visEdge = graphState.edges.filter(edgeVisible);
+  const nodeOn = new Set();
+  visEdge.forEach(e=>{ nodeOn.add(e.source); nodeOn.add(e.target); });
+  graphState.nodes.forEach(n=>{
+    if(graphState.viewMode==='today'){
+      n.visible = nodeOn.has(n.id);
+    } else {
+      n.visible = n.type==='theme' ? true : nodeOn.has(n.id);
+    }
+  });
+}
+
+// 市场标签（沪/深/创/科/北）
+function marketTag(code){
+  const c = String(code||'');
+  if(c.startsWith('688')) return '科';
+  if(c.startsWith('300')||c.startsWith('301')) return '创';
+  if(c.startsWith('6')) return '沪';
+  if(c.startsWith('0')||c.startsWith('3')) return '深';
+  if(c.startsWith('8')||c.startsWith('4')) return '北';
+  return '';
+}
+
+// 渲染泳道：每个题材一列，个股按环节分组为节点卡片
+function graphRender(){
+  const themes = THEMES.slice();
+  // 题材按板块平均涨幅排序
+  const themeStats = {};
+  themes.forEach(th=>{
+    const members = STOCKS.filter(s=>s.theme===th.id);
+    const avg = members.length ? members.reduce((a,b)=>a+b.change,0)/members.length : 0;
+    themeStats[th.id] = avg;
+  });
+  const ordered = themes.slice().sort((a,b)=>(themeStats[b.id]||0)-(themeStats[a.id]||0));
+
+  const lanesHtml = ordered.map(th=>{
+    const stocks = STOCKS.filter(s=>s.theme===th.id);
+    const avg = themeStats[th.id] || 0;
+    // 按环节分组
+    const segOrder = (th.segments||[]).map(s=>s[0]);
+    const segsHtml = segOrder.map(seg=>{
+      const segStocks = stocks.filter(s=>s.segment===seg);
+      if(!segStocks.length) return '';
+      const segEn = (th.segments.find(x=>x[0]===seg)||[])[1] || seg;
+      const segAvg = segStocks.reduce((a,b)=>a+b.change,0)/segStocks.length;
+      const nodeButtons = segStocks.map(s=>{
+        const node = graphState.nodes.find(n=>n.id===s.id);
+        const visible = node ? node.visible : true;
+        const hot = nodeIsHot(node);
+        const change = s.change;
+        const chgClsName = change>=0?'up':'down';
+        return `
+          <button type="button" class="graph-node ${visible?'':'filtered-out'}" data-id="${s.id}"
+            title="${esc(s.name)} · ${esc(s.code)}">
+            <span class="node-main">
+              <small>${marketTag(s.code)}</small>
+              <strong>${esc(lname(s))}</strong>
+              <span class="chg ${chgClsName}">${fmtChg(change)}</span>
+            </span>
+            <span class="node-meta">
+              ${hot?'<span class="hot-tag">'+t('tagToday')+'</span>':''}
+            </span>
+          </button>`;
+      }).join('');
+      return `
+        <div class="seg-group" data-seg="${esc(seg)}">
+          <div class="seg-head">
+            <span>${esc(LANG==='en'?segEn:seg)}</span>
+            <em class="${segAvg>=0?'up':'down'}">${fmtChg(segAvg)}</em>
+          </div>
+          <div class="graph-node-list">${nodeButtons}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <section class="graph-lane" data-group="${th.id}">
+        <header class="lane-head">
+          <span class="lane-icon">${GROUP_ICON[th.id]||'◆'}</span>
+          <strong>${esc(lname(th))}</strong>
+          <span class="lane-avg ${avg>=0?'up':'down'}">${fmtChg(avg)}</span>
+          <em>${stocks.length}</em>
+        </header>
+        ${segsHtml}
+      </section>`;
+  }).join('');
+
+  graphState.lanes.innerHTML = lanesHtml;
+  bindGraphNodes();
+  // 延迟到下一帧绘制关系线（等 DOM 布局完成、getBoundingClientRect 可用）
+  requestAnimationFrame(()=>drawRelationLines(graphState.locked?.id || null));
+}
+
+// 画关系线（SVG 覆盖层）：连接个股到其题材，以及个股间的供应/竞争关系
+function drawRelationLines(focusId){
+  const svg = graphState.svg;
+  const wrap = svg.parentElement;
+  if(!wrap) return;
+  const wrapRect = wrap.getBoundingClientRect();
+
+  const themes = graphState.nodes.filter(n=>n.type==='theme');
+  const stocks = graphState.nodes.filter(n=>n.type==='stock');
+
+  const lines = [];
+  // 个股 -> 所属题材（chain/news 边）
+  const themeEls = {};
+  themes.forEach(th=>{
+    const el = graphState.lanes.querySelector(`.graph-lane[data-group="${th.id}"] .lane-head`);
+    if(el) themeEls[th.id] = el;
+  });
+  const stockEls = {};
+  stocks.forEach(s=>{
+    const el = graphState.lanes.querySelector(`.graph-node[data-id="${s.id}"]`);
+    if(el && !el.classList.contains('filtered-out')) stockEls[s.id] = el;
+  });
+
+  function anchor(el, anchorPoint){
+    // anchorPoint: 'top'|'bottom'|'left'|'right' 取元素边缘中点（相对 wrap）
+    const r = el.getBoundingClientRect();
+    let x, y;
+    if(anchorPoint==='top'){ x = r.left + r.width/2; y = r.top; }
+    else if(anchorPoint==='bottom'){ x = r.left + r.width/2; y = r.bottom; }
+    else if(anchorPoint==='left'){ x = r.left; y = r.top + r.height/2; }
+    else { x = r.right; y = r.top + r.height/2; }
+    return { x: x - wrapRect.left, y: y - wrapRect.top };
+  }
+
+  // 收集当前高亮焦点
+  const focus = focusId || graphState.locked?.id || graphState.hover?.id || null;
+  const focusNode = focus ? graphState.nodes.find(n=>n.id===focus) : null;
+
+  graphState.edges.filter(edgeVisible).forEach(e=>{
+    const isThemeEdge = e.source.startsWith('t-') || e.target.startsWith('t-');
+    let aEl, bEl, aPt, bPt;
+    if(isThemeEdge){
+      const themeId = e.source.startsWith('t-') ? e.source : e.target;
+      const stockId = e.source.startsWith('t-') ? e.target : e.source;
+      aEl = themeEls[themeId]; bEl = stockEls[stockId];
+      // 题材用 header 右边缘，个股用左边缘（横向连线）
+      if(!aEl || !bEl) return;
+      aPt = anchor(aEl, 'right'); bPt = anchor(bEl, 'left');
+    } else {
+      aEl = stockEls[e.source]; bEl = stockEls[e.target];
+      if(!aEl || !bEl) return;
+      aPt = anchor(aEl, 'bottom'); bPt = anchor(bEl, 'bottom');
+    }
+    const dim = focusNode && !(e.source===focus||e.target===focus);
+    const hot = focusNode && (e.source===focus||e.target===focus);
+    const colorVar = EDGE_VAR[e.type] || '--cyan';
+    lines.push(`
+      <path class="rel-line ${dim?'dimmed':''}" d="M${aPt.x},${aPt.y} C${aPt.x+40},${aPt.y} ${bPt.x-40},${bPt.y} ${bPt.x},${bPt.y}"
+        style="stroke:var(${colorVar});stroke-width:${hot?2.4:(e.today?1.6:1)};stroke-opacity:${dim?0.05:(e.today?0.8:0.4)};stroke-dasharray:${e.type==='compete'?'5,4':(e.type==='other'?'2,4':'none')}"/>`);
+  });
+
+  svg.innerHTML = lines.join('');
+  // 设置 SVG viewBox 以匹配容器尺寸
+  svg.setAttribute('viewBox', `0 0 ${wrap.clientWidth} ${wrap.clientHeight}`);
+  svg.setAttribute('width', wrap.clientWidth);
+  svg.setAttribute('height', wrap.clientHeight);
+}
+
+function bindGraphNodes(){
+  graphState.lanes.querySelectorAll('.graph-node').forEach(nodeBtn=>{
+    const id = nodeBtn.dataset.id;
+    nodeBtn.addEventListener('pointerenter', e=>{
+      const n = graphState.nodes.find(x=>x.id===id);
+      if(n){
+        graphState.hover = n;
+        showTooltip(n, e.clientX, e.clientY);
+        drawRelationLines(id);
+        highlightNeighbors(id);
+      }
+    });
+    nodeBtn.addEventListener('pointerleave', ()=>{
+      graphState.hover = null;
+      hideTooltip();
+      if(graphState.locked){
+        drawRelationLines(graphState.locked.id);
+        highlightNeighbors(graphState.locked.id);
+      } else {
+        drawRelationLines(null);
+        clearHighlight();
+      }
+    });
+    nodeBtn.addEventListener('click', ()=>{
+      const n = graphState.nodes.find(x=>x.id===id);
+      if(n){ openDetail(n); }
+    });
+  });
+}
+
+function highlightNeighbors(focusId){
+  const focus = focusId;
+  const neighbors = new Set([focus]);
+  graphState.edges.forEach(e=>{
+    if(e.source===focus) neighbors.add(e.target);
+    if(e.target===focus) neighbors.add(e.source);
+  });
+  graphState.lanes.querySelectorAll('.graph-node').forEach(el=>{
+    if(neighbors.has(el.dataset.id)){
+      el.classList.add('highlighted');
+      el.classList.remove('dimmed');
+    } else {
+      el.classList.add('dimmed');
+      el.classList.remove('highlighted');
+    }
+  });
+}
+
+function clearHighlight(){
+  graphState.lanes.querySelectorAll('.graph-node').forEach(el=>{
+    el.classList.remove('dimmed','highlighted');
+  });
+}
+
+function graphFrame(){
+  // 泳道布局无需力导向模拟；保留空实现以兼容调用
+}
+
+// 视图变换已不需要，保留空实现以兼容
+function applyTransform(){}
+function screenToWorld(mx,my){ const r = graphState.svg.getBoundingClientRect(); return {x:mx-r.left, y:my-r.top}; }
+
+function graphEvents(){
+  // 交互已通过 bindGraphNodes 绑定；保留空实现以兼容
+}
+
+/* ============================================================
+   图例
+   ============================================================ */
+function renderLegend(){
+  const typeLabel = { news:t('relNews'), chain:t('relChain'), supply:t('relSupply'), compete:t('relCompete'), other:t('relOther') };
+  $('#legend').innerHTML = `
+    <div class="l-title">${t('relLegendTitle')}</div>
+    ${Object.entries(EDGE_TYPES).map(([k,t])=>`
+      <div class="legend-item ${t.visible?'':'off'}" data-type="${k}">
+        <span class="swatch ${k}"></span>${typeLabel[k]}
+      </div>`).join('')}
+    <div style="height:1px;background:var(--border);margin:2px 0"></div>
+    <div class="legend-item"><span class="node-sw theme"></span>${t('nodeTheme')}</div>
+    <div class="legend-item"><span class="node-sw stock" style="background:var(--up)"></span>${t('nodeUp')}</div>
+    <div class="legend-item"><span class="node-sw stock" style="background:var(--down)"></span>${t('nodeDown')}</div>`;
+  $('#legend').querySelectorAll('.legend-item[data-type]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const k=el.dataset.type; EDGE_TYPES[k].visible=!EDGE_TYPES[k].visible;
+      el.classList.toggle('off',!EDGE_TYPES[k].visible);
+      graphApplyVisibility();
+      graphRender();
+    });
+  });
+}
+
+/* ============================================================
+   tooltip
+   ============================================================ */
+const tooltip = (()=>{
+  const el=document.createElement('div'); el.className='graph-tooltip'; document.body.appendChild(el); return el;
+})();
+function showTooltip(n,mx,my){
+  const w=Math.min(innerWidth-20,220);
+  let html = `<div class="tt-name">${esc(lname(n))}</div>`;
+  if(n.type==='theme'){
+    html += `<div class="tt-row"><span>${t('themeLabel')}</span><b>${n.desc?esc(ldesc(n).slice(0,20)+'…'):''}</b></div>`;
+    const stocks = STOCKS.filter(s=>s.theme===n.id);
+    html += `<div class="tt-row"><span>${t('relatedStocks')}</span><b>${stocks.length}</b></div>`;
+  } else {
+    const stock = n._stock || STOCKS.find(s=>s.id===n.id);
+    const price = stock ? stock.price : 0;
+    const change = stock ? stock.change : 0;
+    html += `<div class="tt-row"><span>${t('code')}</span><b>${esc(n.code)}</b></div>
+             <div class="tt-row"><span>${t('latestPrice')}</span><b>${price.toFixed(2)}</b></div>
+             <div class="tt-row"><span>${t('changePct')}</span><b class="${chgCls(change)}">${fmtChg(change)}</b></div>`;
+  }
+  html += `<div style="margin-top:6px;font-size:11px;color:var(--faint)">${t('clickLock')}</div>`;
+  el.innerHTML=html; el.style.display='block';
+  const x = Math.min(mx+16, innerWidth-w-12), y = Math.min(my+16, innerHeight-140);
+  el.style.left=x+'px'; el.style.top=y+'px';
+}
+function hideTooltip(){ tooltip.style.display='none'; }
+
+/* ============================================================
+   详情面板
+   ============================================================ */
+function openDetail(n){
+  graphState.locked = n;
+  $('#dName').textContent = lname(n);
+  const typeLabel = { news:t('relNews'), chain:t('relChain'), supply:t('relSupply'), compete:t('relCompete'), other:t('relOther') };
+  if(n.type==='stock'){
+    const stock = n._stock || STOCKS.find(s=>s.id===n.id);
+    const themeName = stock && stock.theme ? nodeName(stock.theme) : '—';
+    const price = stock ? stock.price : 0;
+    const change = stock ? stock.change : 0;
+    $('#dCode').textContent = n.code + ' · ' + themeName;
+    const rels = graphState.edges.filter(e=>e.source===n.id||e.target===n.id).map(e=>{
+      const other = e.source===n.id?e.target:e.source;
+      const on = graphState.nodes.find(x=>x.id===other);
+      return { other, on, type:e.type, dir: e.source===n.id?'→':'←' };
+    });
+    $('#dBody').innerHTML = `
+      <div class="kv"><span>${t('latestPrice')}</span><b class="${chgCls(change)}">${price.toFixed(2)}</b></div>
+      <div class="kv"><span>${t('changePct')}</span><b class="${chgCls(change)}">${fmtChg(change)}</b></div>
+      <div class="kv"><span>${t('sector')}</span><b>${esc(themeName)}</b></div>
+      <div class="detail-sec">
+        <div class="ds-title">${t('industryChain')}（${rels.length}）</div>
+        <div class="rel-list">
+          ${rels.map(r=>`
+            <div class="rel-row">
+              <span class="rl-type">${typeLabel[r.type]}</span>
+              <span class="rl-name">${esc(lname(r.on))}</span>
+              <span class="rl-arrow">${r.dir}</span>
+            </div>`).join('') || `<div style="color:var(--faint)">${t('noRelation')}</div>`}
+        </div>
+      </div>
+      <div class="detail-sec">
+        <div class="ds-title">${t('relatedEvents')}</div>
+        <div class="rel-list">
+          ${EVENTS.filter(e=>(e.rel||[]).includes(n.id)).map(e=>`
+            <div class="rel-row" style="flex-direction:column;align-items:flex-start;gap:3px">
+              <span style="font-size:11px;color:var(--faint)">${esc(e.time)} · ${esc(ltag(e.tag))}</span>
+              <span class="rl-name">${esc(e.title)}</span>
+            </div>`).join('') || `<div style="color:var(--faint)">${t('noEvents')}</div>`}
+        </div>
+      </div>`;
+  } else {
+    $('#dCode').textContent = t('themeLabel');
+    const stocks = STOCKS.filter(s=>s.theme===n.id);
+    const upN = stocks.filter(s=>s.change>0).length;
+    $('#dBody').innerHTML = `
+      <p style="font-size:13.5px;color:var(--muted);margin-bottom:16px">${esc(ldesc(n))}</p>
+      <div class="kv"><span>${t('relatedStocks')}</span><b>${stocks.length}</b></div>
+      <div class="kv"><span>${t('upDown')}</span><b><span class="up">${upN}</span> / <span class="down">${stocks.length-upN}</span></b></div>
+      <div class="detail-sec">
+        <div class="ds-title">${t('components')}</div>
+        <div class="rel-list">
+          ${stocks.map(s=>`
+            <div class="rel-row" style="cursor:pointer" data-jump="${s.id}">
+              <span class="rl-name">${esc(lname(s))}</span>
+              <span class="rl-arrow" style="margin-left:auto">${esc(s.code)}</span>
+              <b class="${chgCls(s.change)} num">${fmtChg(s.change)}</b>
+            </div>`).join('') || `<div style="color:var(--faint)">${t('noMembers')}</div>`}
+        </div>
+      </div>`;
+    $('#dBody').querySelectorAll('[data-jump]').forEach(el=>{
+      el.addEventListener('click',()=>{ openDetail(graphState.nodes.find(x=>x.id===el.dataset.jump)); });
+    });
+  }
+  $('#detail').classList.add('open');
+}
+function closeDetail(){ $('#detail').classList.remove('open'); graphState.locked=null; }
+$('#dClose').addEventListener('click',closeDetail);
+
+/* ============================================================
+   搜索面板
+   ============================================================ */
+const palette = $('#palette');
+function openPalette(){ palette.classList.add('open'); $('#palInput').value=''; renderPalette(''); setTimeout(()=>$('#palInput').focus(),30); }
+function closePalette(){ palette.classList.remove('open'); }
+$('#searchBtn').addEventListener('click',openPalette);
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette(); }
+  if(e.key==='Escape'){ closePalette(); closeDetail(); }
+});
+$('#palette').addEventListener('click',e=>{ if(e.target.id==='palette') closePalette(); });
+$('#palInput').addEventListener('input',e=>renderPalette(e.target.value));
+
+function renderPalette(q){
+  q=q.trim().toLowerCase();
+  const results=[];
+  if(q){
+    NODES.forEach(n=>{ if((n.name.toLowerCase().includes(q)||(n.name_en||'').toLowerCase().includes(q)||(n.code||'').includes(q))) results.push({type:LANG==='en'?'Stock/Theme':'个股/题材',name:lname(n),meta:n.type==='theme'?t('themeLabel'):n.code,node:n.id}); });
+    EVENTS.forEach((e,i)=>{ if(e.title.toLowerCase().includes(q)||(e.title_en||'').toLowerCase().includes(q)) results.push({type:t('navEvents'),name:LANG==='en'?(e.title_en||e.title):e.title,meta:e.time,ev:i}); });
+  }
+  $('#palResults').innerHTML = results.length
+    ? results.slice(0,20).map((r,i)=>`
+      <div class="pal-res" data-i="${i}">
+        <span class="pr-type">${r.type}</span>
+        <span class="pr-name">${esc(r.name)}</span>
+        <span class="pr-meta">${esc(r.meta||'')}</span>
+      </div>`).join('')
+    : `<div class="pal-empty">${q?t('searchEmpty'):t('searchPrompt')}</div>`;
+  $('#palResults').querySelectorAll('.pal-res').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const r = results[+el.dataset.i];
+      if(r.node){
+        // 聚焦图谱节点
+        document.querySelector('#sec-graph').scrollIntoView({behavior:'smooth'});
+        const n = graphState.nodes.find(x=>x.id===r.node);
+        if(n){
+          openDetail(n);
+          // 高亮对应节点卡片
+          const el = graphState.lanes.querySelector(`.graph-node[data-id="${n.id}"], .graph-lane[data-group="${n.id}"] .lane-head`);
+          if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
+          if(n.type==='stock'){ highlightNeighbors(n.id); drawRelationLines(n.id); }
+        }
+      } else if(r.ev!=null){
+        document.querySelector('#sec-events').scrollIntoView({behavior:'smooth'});
+      }
+      closePalette();
+    });
+  });
+}
+
+/* ============================================================
+   实时更新（真实行情 + 真实快讯轮询）
+   ============================================================ */
+const EVENTS_MAX = 30; // 事件流上限，防止无限增长
+function setUpdateTime(){ $('#updateTime').textContent = nowStr(); }
+
+// 更新连接状态 pill
+function setConnStatus(state, text){
+  const pill = $('#connPill'), dot = pill?.querySelector('.dot'), label = $('#connText');
+  if(!pill) return;
+  pill.classList.toggle('offline', state==='offline');
+  if(dot) dot.style.background = state==='offline' ? 'var(--up)' : 'var(--down)';
+  if(label) label.textContent = text;
+}
+
+// 行情轮询：拉取真实数据并刷新 UI
+async function pollQuotes(){
+  const ok = await fetchQuotes();
+  if(ok){
+    refreshQuotesUI();
+    setUpdateTime();
+    setConnStatus('online', t('quoteOnline'));
+  }else{
+    setConnStatus('offline', t('quoteOffline'));
+  }
+}
+
+// 快讯轮询：拉取真实 7x24 快讯注入事件流
+let lastNewsCount = 0;
+async function pollNews(){
+  const added = await fetchNews();
+  if(added){
+    setUpdateTime();
+    // 仅当新增条目时 toast，避免首次全量加载刷屏
+    const first = $('#eventList').firstElementChild;
+    if(first){ first.classList.add('new'); setTimeout(()=>first.classList.remove('new'),1400); }
+    if(lastNewsCount>0 && added>0) toast(`${t('toastNewsUpdate')} ${added} ${t('newsUnit')}`);
+    lastNewsCount += added;
+  }
+}
+
+let toastTimer=null;
+function toast(msg){
+  $('#toastText').textContent=msg; $('#toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3200);
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+function boot(){
+  // 初始化语言（跟随系统 / 记忆，再应用静态文案）
+  LANG = detectLang()==='en' ? 'en' : 'zh';
+  document.documentElement.setAttribute('lang', LANG==='en'?'en':'zh-CN');
+  applyStaticI18n();
+  syncLangUI();
+
+  renderEvents();
+  renderReview();
+  renderTicker();
+  // 用当前行情（初始为拟真值，拉到真实数据后自动更新）生成今日主线
+  refreshMainLine();
+  animateTicker();
+  graphInit();
+  graphBuild();
+  graphApplyVisibility();
+  graphRender();
+  renderLegend();
+  setUpdateTime();
+
+  // 主题切换
+  syncThemeUI();
+  $('#themeBtn').addEventListener('click', toggleTheme);
+
+  // 语言切换
+  $('#langBtn').addEventListener('click', ()=>{ setLang(LANG==='en'?'zh':'en', true); });
+
+  // 事件流筛选
+  $('#evFilters').addEventListener('click',e=>{
+    const b=e.target.closest('.fbtn'); if(!b) return;
+    evFilter=b.dataset.cat; renderEvents();
+  });
+  // 事件流关联标签跳转
+  $('#eventList').addEventListener('click',e=>{
+    const r=e.target.closest('.rel'); if(!r) return;
+    const n=graphState.nodes.find(x=>x.id===r.dataset.node);
+    if(n){ document.querySelector('#sec-graph').scrollIntoView({behavior:'smooth'}); openDetail(n); }
+  });
+  // 视图切换
+  $('#viewAll').addEventListener('click',()=>{ graphState.viewMode='all'; $('#viewAll').classList.add('active'); $('#viewToday').classList.remove('active'); graphApplyVisibility(); graphRender(); });
+  $('#viewToday').addEventListener('click',()=>{ graphState.viewMode='today'; $('#viewToday').classList.add('active'); $('#viewAll').classList.remove('active'); graphApplyVisibility(); graphRender(); });
+  $('#resetGraph').addEventListener('click',()=>{ clearHighlight(); drawRelationLines(null); closeDetail(); });
+  // 刷新：立即拉取一次真实行情
+  $('#refreshBtn').addEventListener('click',async function(){
+    this.classList.add('spinning');
+    const ok = await pollQuotes();
+    this.classList.remove('spinning');
+    toast(ok ? t('toastQuoteOk') : t('toastQuoteFail'));
+  });
+
+  // 导航高亮
+  const navLinks=[...document.querySelectorAll('.nav-inner a')];
+  const observer=new IntersectionObserver(es=>{
+    es.forEach(en=>{ if(en.isIntersecting){ navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+en.target.id)); } });
+  },{rootMargin:'-40% 0px -55% 0px'});
+  document.querySelectorAll('main section').forEach(s=>observer.observe(s));
+
+  // 真实行情轮询（15 秒）+ 真实快讯轮询（30 秒）
+  pollQuotes();
+  pollNews();
+  setInterval(pollQuotes, QUOTE_REFETCH_MS);
+  setInterval(pollNews, NEWS_REFETCH_MS);
+
+  // 关闭载入遮罩
+  setTimeout(()=>{ $('#boot').classList.add('hide'); toast(t('toastConnected')); }, 1400);
+}
+
+boot();
+</script>
+</body>
+</html>
